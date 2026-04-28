@@ -27,13 +27,12 @@ def _auto_serial(size_code, seq):
 
 
 def _next_seq():
-    """Get next auto-serial sequence number."""
-    last = Tank.query.order_by(Tank.id.desc()).first()
-    return (last.id + 1) if last else 1
+    """Get next auto-serial sequence number based on current count."""
+    return Tank.query.count() + 1
 
 
 def _batch_code():
-    """Generate batch code like BATCH-20240305."""
+    """Generate batch code like BATCH-20240305-0001."""
     return f"BATCH-{date.today().strftime('%Y%m%d')}-{_next_seq():04d}"
 
 
