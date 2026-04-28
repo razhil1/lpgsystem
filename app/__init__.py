@@ -66,19 +66,19 @@ def init_db(app):
             db.create_all()
             from sqlalchemy import text
             try:
-                db.session.execute(text("ALTER TABLE plants ADD COLUMN refill_cost_11kg_fiber NUMERIC(10, 2) DEFAULT 0"))
+                db.session.execute(text("ALTER TABLE lpg_plants ADD COLUMN refill_cost_11kg_fiber NUMERIC(10, 2) DEFAULT 0"))
                 db.session.commit()
             except Exception:
                 db.session.rollback()
 
             try:
-                db.session.execute(text("ALTER TABLE tanks ADD COLUMN tank_category VARCHAR(20) DEFAULT 'Old'"))
+                db.session.execute(text("ALTER TABLE lpg_tanks ADD COLUMN tank_category VARCHAR(20) DEFAULT 'Old'"))
                 db.session.commit()
             except Exception:
                 db.session.rollback()
 
             try:
-                db.session.execute(text("ALTER TABLE transaction_items ADD COLUMN tank_category VARCHAR(20)"))
+                db.session.execute(text("ALTER TABLE lpg_transaction_items ADD COLUMN tank_category VARCHAR(20)"))
                 db.session.commit()
             except Exception:
                 db.session.rollback()

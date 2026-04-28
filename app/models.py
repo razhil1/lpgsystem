@@ -7,7 +7,7 @@ from app.extensions import db
 # USERS
 # ─────────────────────────────────────────
 class User(UserMixin, db.Model):
-    __tablename__ = 'users'
+    __tablename__ = 'lpg_users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
@@ -33,7 +33,7 @@ def load_user(user_id):
 # CONSUMERS
 # ─────────────────────────────────────────
 class Consumer(db.Model):
-    __tablename__ = 'consumers'
+    __tablename__ = 'lpg_consumers'
     id = db.Column(db.Integer, primary_key=True)
     consumer_code = db.Column(db.String(20), unique=True, nullable=False)
     business_name = db.Column(db.String(150), nullable=False)
@@ -47,7 +47,7 @@ class Consumer(db.Model):
     notes = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('lpg_users.id'))
 
     transactions = db.relationship('Transaction', backref='consumer', lazy='dynamic')
 
@@ -59,7 +59,7 @@ class Consumer(db.Model):
 # PLANTS
 # ─────────────────────────────────────────
 class Plant(db.Model):
-    __tablename__ = 'plants'
+    __tablename__ = 'lpg_plants'
     id = db.Column(db.Integer, primary_key=True)
     plant_name = db.Column(db.String(150), nullable=False)
     address = db.Column(db.Text)
@@ -82,7 +82,7 @@ class Plant(db.Model):
 # TANKS
 # ─────────────────────────────────────────
 class Tank(db.Model):
-    __tablename__ = 'tanks'
+    __tablename__ = 'lpg_tanks'
     id = db.Column(db.Integer, primary_key=True)
     # serial_number is auto-generated if not provided (GP-YYYYMMDD-XXXX)
     serial_number = db.Column(db.String(50), unique=True, nullable=True)
@@ -95,15 +95,15 @@ class Tank(db.Model):
     brand = db.Column(db.String(50))
     status = db.Column(db.String(20), default='Empty', nullable=False)
     location = db.Column(db.String(30), default='Warehouse', nullable=False)
-    current_consumer_id = db.Column(db.Integer, db.ForeignKey('consumers.id'), nullable=True)
-    current_plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), nullable=True)
+    current_consumer_id = db.Column(db.Integer, db.ForeignKey('lpg_consumers.id'), nullable=True)
+    current_plant_id = db.Column(db.Integer, db.ForeignKey('lpg_plants.id'), nullable=True)
     purchase_date = db.Column(db.Date, nullable=True)
     purchase_cost = db.Column(db.Numeric(10, 2), default=0)
     last_transaction_date = db.Column(db.DateTime, nullable=True)
     notes = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('lpg_users.id'))
 
     current_consumer = db.relationship('Consumer', foreign_keys=[current_consumer_id])
     current_plant = db.relationship('Plant', foreign_keys=[current_plant_id])
@@ -122,13 +122,13 @@ class Tank(db.Model):
 # TRANSACTIONS
 # ─────────────────────────────────────────
 class Transaction(db.Model):
-    __tablename__ = 'transactions'
+    __tablename__ = 'lpg_transactions'
     id = db.Column(db.Integer, primary_key=True)
     invoice_no = db.Column(db.String(30), unique=True, nullable=False)
     transaction_type = db.Column(db.String(20), nullable=False)
     transaction_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
-    consumer_id = db.Column(db.Integer, db.ForeignKey('consumers.id'), nullable=True)
-    plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), nullable=True)
+    consumer_id = db.Column(db.Integer, db.ForeignKey('lpg_consumers.id'), nullable=True)
+    plant_id = db.Column(db.Integer, db.ForeignKey('lpg_plants.id'), nullable=True)
     driver_name = db.Column(db.String(100))
     truck_plate = db.Column(db.String(20))
     total_amount = db.Column(db.Numeric(12, 2), default=0)
@@ -136,7 +136,7 @@ class Transaction(db.Model):
     payment_status = db.Column(db.String(20), default='Unpaid')
     remarks = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('lpg_users.id'))
 
     plant = db.relationship('Plant', foreign_keys=[plant_id])
     items = db.relationship('TransactionItem', backref='transaction', lazy='dynamic', cascade='all, delete-orphan')
@@ -178,11 +178,11 @@ class Transaction(db.Model):
 
 
 class TransactionItem(db.Model):
-    __tablename__ = 'transaction_items'
+    __tablename__ = 'lpg_transaction_items'
     id = db.Column(db.Integer, primary_key=True)
-    transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=False)
+    transaction_id = db.Column(db.Integer, db.ForeignKey('lpg_transactions.id'), nullable=False)
     # tank_id is NULL for quantity-based items (no serial tracking)
-    tank_id = db.Column(db.Integer, db.ForeignKey('tanks.id'), nullable=True)
+    tank_id = db.Column(db.Integer, db.ForeignKey('lpg_tanks.id'), nullable=True)
     tank_size = db.Column(db.String(20), nullable=True)   # e.g. '11kg', for qty-based
     tank_category = db.Column(db.String(20), nullable=True)
     quantity = db.Column(db.Integer, default=1)
@@ -201,34 +201,34 @@ class TransactionItem(db.Model):
 # PAYMENTS
 # ─────────────────────────────────────────
 class Payment(db.Model):
-    __tablename__ = 'payments'
+    __tablename__ = 'lpg_payments'
     id = db.Column(db.Integer, primary_key=True)
-    transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=False)
+    transaction_id = db.Column(db.Integer, db.ForeignKey('lpg_transactions.id'), nullable=False)
     payment_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     payment_method = db.Column(db.String(30), default='Cash')
     reference_no = db.Column(db.String(100))
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('lpg_users.id'))
 
 
 # ─────────────────────────────────────────
 # TANK HISTORY
 # ─────────────────────────────────────────
 class TankHistory(db.Model):
-    __tablename__ = 'tank_history'
+    __tablename__ = 'lpg_tank_history'
     id = db.Column(db.Integer, primary_key=True)
-    tank_id = db.Column(db.Integer, db.ForeignKey('tanks.id'), nullable=False)
-    transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
+    tank_id = db.Column(db.Integer, db.ForeignKey('lpg_tanks.id'), nullable=False)
+    transaction_id = db.Column(db.Integer, db.ForeignKey('lpg_transactions.id'), nullable=True)
     event_type = db.Column(db.String(50), nullable=False)  # Delivered, Returned, Sent to Plant, etc.
     event_description = db.Column(db.Text)
     from_location = db.Column(db.String(100))
     to_location = db.Column(db.String(100))
-    consumer_id = db.Column(db.Integer, db.ForeignKey('consumers.id'), nullable=True)
-    plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), nullable=True)
+    consumer_id = db.Column(db.Integer, db.ForeignKey('lpg_consumers.id'), nullable=True)
+    plant_id = db.Column(db.Integer, db.ForeignKey('lpg_plants.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('lpg_users.id'))
 
     consumer = db.relationship('Consumer', foreign_keys=[consumer_id])
     plant = db.relationship('Plant', foreign_keys=[plant_id])
@@ -239,9 +239,9 @@ class TankHistory(db.Model):
 # AUDIT LOGS
 # ─────────────────────────────────────────
 class AuditLog(db.Model):
-    __tablename__ = 'audit_logs'
+    __tablename__ = 'lpg_audit_logs'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('lpg_users.id'), nullable=True)
     action = db.Column(db.String(50), nullable=False)   # CREATE, UPDATE, DELETE, LOGIN, etc.
     module = db.Column(db.String(50), nullable=False)   # tanks, consumers, transactions, etc.
     record_id = db.Column(db.Integer, nullable=True)
@@ -256,7 +256,7 @@ class AuditLog(db.Model):
 # SYSTEM SETTINGS
 # ─────────────────────────────────────────
 class SystemSetting(db.Model):
-    __tablename__ = 'system_settings'
+    __tablename__ = 'lpg_system_settings'
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True, nullable=False)
     value = db.Column(db.Text)
