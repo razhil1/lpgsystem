@@ -64,6 +64,9 @@ def index():
     # Summary counts per size
     size_summary = {}
     warehouse = get_setting('Warehouse Location Name', default='Warehouse')
+    total_full_wh = Tank.query.filter_by(status='Full', location=warehouse, is_active=True).count()
+    total_empty_wh = Tank.query.filter_by(status='Empty', location=warehouse, is_active=True).count()
+
     for s in get_setting('Tank Sizes', is_list=True):
         size_summary[s] = {
             'total': Tank.query.filter_by(tank_size=s, is_active=True).count(),
@@ -74,7 +77,8 @@ def index():
 
     return render_template('tanks/index.html', tanks=tanks,
                            search=search, size=size, status=status, location=location,
-                           per_page=per_page, size_summary=size_summary)
+                           per_page=per_page, size_summary=size_summary,
+                           total_full_wh=total_full_wh, total_empty_wh=total_empty_wh)
 
 
 # ──────────────────────────────────────────────────────

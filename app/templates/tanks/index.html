@@ -14,6 +14,29 @@
 </div>
 
 <!-- ── Inventory Summary Cards ─────────────────────────────── -->
+{# ══ MAIN STORAGE OVERVIEW ══════════════════════════════════════════════════════════ #}
+<div class="card mb-4 border-0 shadow-sm overflow-hidden" style="border-radius: 16px;">
+    <div class="row g-0">
+        <div class="col-md-3 bg-primary p-4 d-flex flex-column justify-content-center align-items-center text-white text-center">
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; font-weight: 700; margin-bottom: 5px;">Main Storage</div>
+            <div style="font-size: 38px; font-weight: 900; line-height: 1;">{{ total_full_wh + total_empty_wh }}</div>
+            <div style="font-size: 12px; font-weight: 500; margin-top: 5px;">Total Tanks in Stock</div>
+        </div>
+        <div class="col-md-9 bg-white p-3 d-flex align-items-center">
+            <div class="d-flex w-100 justify-content-around text-center">
+                <div class="px-3 border-end flex-grow-1">
+                    <div class="text-success" style="font-size: 28px; font-weight: 900; line-height: 1;">{{ total_full_wh }}</div>
+                    <div class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 8px;">Total Full Tanks</div>
+                </div>
+                <div class="px-3 flex-grow-1">
+                    <div class="text-secondary" style="font-size: 28px; font-weight: 900; line-height: 1; opacity: 0.6;">{{ total_empty_wh }}</div>
+                    <div class="text-muted" style="font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; margin-top: 8px;">Total Empty Tanks</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-3 mb-4">
     {% for size, data in size_summary.items() %}
     <div class="col-md-3">
