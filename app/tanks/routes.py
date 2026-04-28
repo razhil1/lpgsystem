@@ -63,12 +63,13 @@ def index():
 
     # Summary counts per size
     size_summary = {}
+    warehouse = get_setting('Warehouse Location Name', default='Warehouse')
     for s in get_setting('Tank Sizes', is_list=True):
         size_summary[s] = {
             'total': Tank.query.filter_by(tank_size=s, is_active=True).count(),
             'full': Tank.query.filter_by(tank_size=s, status='Full', is_active=True).count(),
             'empty': Tank.query.filter_by(tank_size=s, status='Empty', is_active=True).count(),
-            'warehouse': Tank.query.filter_by(tank_size=s, location='Warehouse', is_active=True).count(),
+            'warehouse': Tank.query.filter_by(tank_size=s, location=warehouse, is_active=True).count(),
         }
 
     return render_template('tanks/index.html', tanks=tanks,
@@ -88,7 +89,7 @@ def create():
         quantity = int(request.form.get('quantity', 1))
         brand = request.form.get('brand', '')
         status = request.form.get('status', 'Empty')
-        location = request.form.get('location', 'Warehouse')
+        location = request.form.get('location', get_setting('Warehouse Location Name', default='Warehouse'))
         purchase_date = parse_date(request.form.get('purchase_date'))
         purchase_cost = request.form.get('purchase_cost') or 0
         notes = request.form.get('notes', '')
@@ -305,13 +306,16 @@ def batch_delete():
 @login_required
 def stock_summary():
     result = {}
-    for s in ['11kg', '11kg Fiber', '22kg', '50kg', 'Industrial']:
+    sizes = get_setting('Tank Sizes', is_list=True)
+    warehouse = get_setting('Warehouse Location Name', default='Warehouse')
+    
+    for s in sizes:
         result[s] = {
             'full_warehouse': Tank.query.filter_by(
-                tank_size=s, status='Full', location='Warehouse', is_active=True
+                tank_size=s, status='Full', location=warehouse, is_active=True
             ).count(),
             'empty_warehouse': Tank.query.filter_by(
-                tank_size=s, status='Empty', location='Warehouse', is_active=True
+                tank_size=s, status='Empty', location=warehouse, is_active=True
             ).count(),
         }
     return jsonify(result)

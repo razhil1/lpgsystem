@@ -353,8 +353,9 @@ def create_return():
 @login_required
 def create_plant_out():
     plants = Plant.query.filter_by(is_active=True).all()
+    WAREHOUSE = get_setting('Warehouse Location Name', default='Warehouse')
     empty_tanks = Tank.query.filter_by(
-        location='Warehouse', status='Empty', is_active=True
+        location=WAREHOUSE, status='Empty', is_active=True
     ).order_by(Tank.serial_number).all()
 
     if request.method == 'POST':
@@ -416,7 +417,7 @@ def create_plant_out():
                 transaction_id=txn.id,
                 event_type='Sent to Plant',
                 event_description=f'Sent to {plant.plant_name if plant else "Plant"} for refilling',
-                from_location='Warehouse',
+                from_location=WAREHOUSE,
                 to_location='At Plant',
                 plant_id=plant_id,
                 created_by=current_user.id
@@ -475,7 +476,8 @@ def create_plant_in():
             item = TransactionItem(transaction_id=txn.id, tank_id=tank.id)
             db.session.add(item)
 
-            tank.location = 'Warehouse'
+            WAREHOUSE = get_setting('Warehouse Location Name', default='Warehouse')
+            tank.location = WAREHOUSE
             tank.status = 'Full'
             tank.current_plant_id = None
             tank.last_transaction_date = datetime.utcnow()
@@ -486,7 +488,7 @@ def create_plant_in():
                 event_type='Received from Plant',
                 event_description=f'Received FULL from {plant.plant_name if plant else "Plant"}',
                 from_location='At Plant',
-                to_location='Warehouse',
+                to_location=WAREHOUSE,
                 plant_id=plant_id,
                 created_by=current_user.id
             )
