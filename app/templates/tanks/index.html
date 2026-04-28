@@ -191,15 +191,15 @@
     </div>
 </div>
 
-<div id="bulkActions" class="mt-3 p-3 bg-light rounded border d-none">
+<div id="bulkActions" class="mt-3 p-3 bg-light rounded border">
     <div class="d-flex align-items-center justify-content-between">
         <div>
             <span id="selectedCount" class="fw-bold text-primary">0</span> items selected
         </div>
         <div>
             {% if current_user.role == 'admin' %}
-            <button id="bulkDelete" class="btn btn-danger">
-                <i class="bi bi-trash me-1"></i>Deactivate Selected
+            <button id="bulkDelete" class="btn btn-danger" disabled>
+                <i class="bi bi-trash me-1"></i>Delete Selected
             </button>
             {% endif %}
         </div>
@@ -247,9 +247,9 @@ $(document).ready(function() {
         const checkedCount = $('.tank-checkbox:checked').length;
         $selectedCount.text(checkedCount);
         if (checkedCount > 0) {
-            $bulkActions.removeClass('d-none');
+            $bulkDelete.prop('disabled', false);
         } else {
-            $bulkActions.addClass('d-none');
+            $bulkDelete.prop('disabled', true);
         }
     }
 
@@ -276,7 +276,7 @@ $(document).ready(function() {
 
         if (selectedIds.length === 0) return;
 
-        if (confirm(`Are you sure you want to deactivate ${selectedIds.length} tanks?`)) {
+        if (confirm(`Are you sure you want to permanently delete ${selectedIds.length} tanks? This cannot be undone.`)) {
             $.ajax({
                 url: "{{ url_for('tanks.batch_delete') }}",
                 method: "POST",

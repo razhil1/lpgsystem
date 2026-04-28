@@ -244,15 +244,23 @@ def delete(id):
     if current_user.role != 'admin':
         flash('You do not have permission to delete tanks.', 'danger')
         return redirect(url_for('tanks.index'))
+    
     tank = Tank.query.get_or_404(id)
-    tank.is_active = False
+    
+    # Delete associated history records first
+    for h in tank.history:
+        db.session.delete(h)
+        
     log = AuditLog(user_id=current_user.id, action='DELETE', module='tanks',
                    record_id=tank.id,
-                   description=f'Deactivated tank: {tank.serial_number}',
+                   description=f'Deleted tank permanently: {tank.serial_number}',
                    ip_address=request.remote_addr)
+    
+    db.session.delete(tank)
     db.session.add(log)
     db.session.commit()
-    flash('Tank deactivated successfully.', 'warning')
+    
+    flash('Tank deleted permanently.', 'warning')
     return redirect(url_for('tanks.index'))
 
 
@@ -272,17 +280,21 @@ def batch_delete():
     count = 0
     for tid in tank_ids:
         tank = db.session.get(Tank, int(tid))
-        if tank and tank.is_active:
-            tank.is_active = False
+        if tank:
+            # Delete associated history records first to satisfy foreign key constraints
+            for h in tank.history:
+                db.session.delete(h)
+            
+            db.session.delete(tank)
             count += 1
             log = AuditLog(user_id=current_user.id, action='DELETE', module='tanks',
                            record_id=tank.id,
-                           description=f'Deactivated tank (Batch): {tank.serial_number}',
+                           description=f'Deleted tank permanently (Batch): {tank.serial_number}',
                            ip_address=request.remote_addr)
             db.session.add(log)
 
     db.session.commit()
-    flash(f'Successfully deactivated {count} tanks.', 'warning')
+    flash(f'Successfully deleted {count} tanks permanently.', 'warning')
     return jsonify({'success': True, 'redirect': url_for('tanks.index')})
 
 
