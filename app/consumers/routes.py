@@ -68,11 +68,19 @@ def index():
         elif row.status == 'Empty':
             tank_stats[cid]['by_size'][sz]['empty'] += row.cnt
 
+    # Calculate Consolidated Totals for the header
+    total_full_all = sum(s['full'] for s in tank_stats.values())
+    total_empty_all = sum(s['empty'] for s in tank_stats.values())
+    total_all_consumers = sum(s['total'] for s in tank_stats.values())
+
     return render_template('consumers/index.html',
                            consumers=consumers,
                            search=search,
                            ctype=ctype,
-                           tank_stats=tank_stats)
+                           tank_stats=tank_stats,
+                           total_full_all=total_full_all,
+                           total_empty_all=total_empty_all,
+                           total_all_consumers=total_all_consumers)
 
 
 # ──────────────────────────────────────────────────────
@@ -150,7 +158,9 @@ def view(id):
     ).order_by(Transaction.created_at.desc()).limit(20).all()
 
     # All tanks currently at this consumer
-    SIZES = ['11kg', '11kg Fiber', '22kg', '50kg', 'Industrial']
+    from app.utils.settings import get_setting
+    SIZES = get_setting('Tank Sizes', is_list=True)
+    CATEGORIES = get_setting('Tank Categories', is_list=True)
     tanks_here = Tank.query.filter_by(
         current_consumer_id=id,
         location='With Consumer',
@@ -190,7 +200,8 @@ def view(id):
 @login_required
 def update_tanks(id):
     consumer = Consumer.query.get_or_404(id)
-    SIZES = ['11kg', '11kg Fiber', '22kg', '50kg', 'Industrial']
+    from app.utils.settings import get_setting
+    SIZES = get_setting('Tank Sizes', is_list=True)
 
     tanks_here = Tank.query.filter_by(
         current_consumer_id=id,
