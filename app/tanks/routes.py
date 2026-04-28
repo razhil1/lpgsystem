@@ -70,8 +70,8 @@ def index():
     for s in get_setting('Tank Sizes', is_list=True):
         size_summary[s] = {
             'total': Tank.query.filter_by(tank_size=s, is_active=True).count(),
-            'full': Tank.query.filter_by(tank_size=s, status='Full', is_active=True).count(),
-            'empty': Tank.query.filter_by(tank_size=s, status='Empty', is_active=True).count(),
+            'full': Tank.query.filter_by(tank_size=s, status='Full', location=warehouse, is_active=True).count(),
+            'empty': Tank.query.filter_by(tank_size=s, status='Empty', location=warehouse, is_active=True).count(),
             'warehouse': Tank.query.filter_by(tank_size=s, location=warehouse, is_active=True).count(),
         }
 
