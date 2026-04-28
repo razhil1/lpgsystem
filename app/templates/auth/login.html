@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block auth_content %}
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-logo"><i class="bi bi-fire"></i></div>
+        <h1 class="text-center fw-800 mb-1" style="font-size:22px;">Gas Pinas Inc.</h1>
+        <p class="text-center mb-4" style="color:var(--text-muted);font-size:13px;">LPG Distribution Management System
+        </p>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <input type="hidden" name="csrf_token" value="">
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text"
+                        style="background:var(--bg-input);border-color:var(--border);color:var(--text-muted);">
+                        <i class="bi bi-person"></i>
+                    </span>
+                    <input type="text" name="username" class="form-control" placeholder="Enter username" autofocus
+                        required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"
+                        style="background:var(--bg-input);border-color:var(--border);color:var(--text-muted);">
+                        <i class="bi bi-lock"></i>
+                    </span>
+                    <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2" style="font-size:15px;">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+            </button>
+        </form>
+
+        <p class="text-center mt-4 mb-0" style="font-size:11px;color:var(--text-label);">
+            © 2024 Gas Pinas Inc. — LPG Management System
+        </p>
+    </div>
+</div>
+{% endblock %}

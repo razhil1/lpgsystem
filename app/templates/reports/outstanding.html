@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Outstanding Balances{% endblock %}
+{% block page_title %}Outstanding Balances{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-exclamation-triangle me-2" style="color:var(--primary)"></i>Outstanding Balances</h1>
+    </div>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary"><i
+            class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<!-- Summary by consumer -->
+{% if consumers %}
+<div class="card mb-4">
+    <div class="card-header"><span>Consumers with Outstanding Balance</span></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Consumer</th>
+                        <th>Type</th>
+                        <th>Phone</th>
+                        <th>Credit Limit</th>
+                        <th class="text-end">Outstanding</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in consumers %}
+                    <tr>
+                        <td style="font-weight:600;">
+                            <a href="{{ url_for('consumers.view', id=c.id) }}"
+                                style="color:var(--text-primary);text-decoration:none;">{{ c.business_name }}</a>
+                        </td>
+                        <td style="font-size:12px;color:var(--text-muted);">{{ c.consumer_type }}</td>
+                        <td style="font-size:12px;color:var(--text-muted);">{{ c.phone or '—' }}</td>
+                        <td>₱{{ "{:,.2f}".format(c.credit_limit or 0) }}</td>
+                        <td class="text-end" style="font-weight:800;color:#ef4444;font-size:15px;">
+                            ₱{{ "{:,.2f}".format(c.outstanding_balance) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Unpaid Invoices with Aging -->
+<div class="card">
+    <div class="card-header"><span>Unpaid / Partial Invoices (Aging Report)</span></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Consumer</th>
+                        <th>Date</th>
+                        <th>Days</th>
+                        <th>Aging Bucket</th>
+                        <th>Total</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr>
+                        <td><code class="text-primary" style="font-size:11px;">{{ txn.invoice_no }}</code></td>
+                        <td style="font-size:12px;">{{ txn.consumer.business_name if txn.consumer else '—' }}</td>
+                        <td style="font-size:12px;color:var(--text-muted);">{{ txn.transaction_date.strftime('%b %d, %Y') if txn.transaction_date else '—' }}</td>
+                        <td class="fw-bold aging-text-{{ '90' if txn.days_outstanding > 90 else '60' if txn.days_outstanding > 60 else '30' if txn.days_outstanding > 30 else '0' }}">
+                            {{ txn.days_outstanding }}
+                        </td>
+                        <td>
+                            {% if txn.days_outstanding > 90 %}
+                            <span class="badge aging-90">90+ Days</span>
+                            {% elif txn.days_outstanding > 60 %}
+                            <span class="badge aging-60">61-90 Days</span>
+                            {% elif txn.days_outstanding > 30 %}
+                            <span class="badge aging-30">31-60 Days</span>
+                            {% else %}
+                            <span class="badge aging-0">0-30 Days</span>
+                            {% endif %}
+                        </td>
+                        <td>₱{{ "{:,.2f}".format(txn.total_amount or 0) }}</td>
+                        <td class="fw-bold text-danger">₱{{ "{:,.2f}".format(txn.balance) }}</td>
+                        <td><span class="badge badge-custom badge-pay-{{ txn.payment_status }}">{{ txn.payment_status }}</span></td>
+                        <td><a href="{{ url_for('transactions.view', id=txn.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .td-invoice { color: var(--primary); font-weight: 600; font-size: 11px; }
+    .aging-text-90 { color: #ef4444; }
+    .aging-text-60 { color: #f59e0b; }
+    .aging-text-30 { color: #fbbf24; }
+    .aging-text-0  { color: #22c55e; }
+    .aging-90 { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .aging-60 { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .aging-30 { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .aging-0  { background: rgba(34,197,94,0.2); color: #22c55e; }
+</style>
+{% endblock %}

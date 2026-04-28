@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Audit Trail{% endblock %}
+{% block page_title %}Audit Trail{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-shield-check me-2" style="color:var(--primary)"></i>Audit Trail</h1>
+    </div>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary"><i
+            class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<div class="card">
+    <div class="card-header"><span>System Activity Log — {{ logs.total }} entries</span></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Module</th>
+                        <th>Description</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td style="font-size:11px;color:var(--text-muted);">{{ log.created_at.strftime('%b %d, %Y %I:%M
+                            %p') }}</td>
+                        <td style="font-size:12px;font-weight:600;">{{ log.user.full_name if log.user else 'System' }}
+                        </td>
+                        <td>
+                            <span class="badge" style="font-size:11px;background:
+                                {% if log.action == 'CREATE' %}rgba(34,197,94,0.2)
+                                {% elif log.action == 'UPDATE' %}rgba(59,130,246,0.2)
+                                {% elif log.action == 'DELETE' %}rgba(239,68,68,0.2)
+                                {% elif log.action == 'LOGIN' %}rgba(249,115,22,0.2)
+                                {% else %}rgba(148,163,184,0.2){% endif %};
+                                color:
+                                {% if log.action == 'CREATE' %}#22c55e
+                                {% elif log.action == 'UPDATE' %}#3b82f6
+                                {% elif log.action == 'DELETE' %}#ef4444
+                                {% elif log.action == 'LOGIN' %}#f97316
+                                {% else %}#94a3b8{% endif %};">{{ log.action }}</span>
+                        </td>
+                        <td style="font-size:12px;font-weight:600;color:var(--text-muted);">{{ log.module }}</td>
+                        <td style="font-size:12px;">{{ log.description }}</td>
+                        <td style="font-size:11px;color:var(--text-label);">{{ log.ip_address or '—' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4" style="color:var(--text-muted);">No audit logs.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if logs.pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination pagination-sm">
+        {% if logs.has_prev %}<li class="page-item"><a class="page-link" href="?page={{ logs.prev_num }}">‹</a></li>{%
+        endif %}
+        {% for p in logs.iter_pages() %}{% if p %}<li class="page-item {% if p == logs.page %}active{% endif %}"><a
+                class="page-link" href="?page={{ p }}">{{ p }}</a></li>{% endif %}{% endfor %}
+        {% if logs.has_next %}<li class="page-item"><a class="page-link" href="?page={{ logs.next_num }}">›</a></li>{%
+        endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

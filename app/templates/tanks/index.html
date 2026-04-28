@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}Tank Registry{% endblock %}
+{% block page_title %}Tank Registry{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-database me-2" style="color:var(--primary)"></i>Tank Registry</h1>
+        <p>Manage and track all LPG cylinders by size</p>
+    </div>
+    <a href="{{ url_for('tanks.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add Tanks
+    </a>
+</div>
+
+<!-- ── Inventory Summary Cards ─────────────────────────────── -->
+<div class="row g-3 mb-4">
+    {% for size, data in size_summary.items() %}
+    <div class="col-md-3">
+        <div class="card" style="border-top: 3px solid var(--primary);">
+            <div class="card-body pb-3">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div style="font-size:22px;font-weight:800;color:var(--primary);">{{ data.total }}</div>
+                        <div style="font-size:13px;font-weight:700;color:var(--text-primary);">{{ size }} Tanks</div>
+                    </div>
+                    <div
+                        style="width:46px;height:46px;background:rgba(249,115,22,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--primary);">
+                        <i class="bi bi-database"></i>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <div
+                        style="flex:1;background:rgba(34,197,94,0.1);border-radius:6px;padding:6px 8px;text-align:center;">
+                        <div style="font-size:16px;font-weight:700;color:#22c55e;">{{ data.full }}</div>
+                        <div style="font-size:10px;color:#22c55e;">Full</div>
+                    </div>
+                    <div
+                        style="flex:1;background:rgba(148,163,184,0.1);border-radius:6px;padding:6px 8px;text-align:center;">
+                        <div style="font-size:16px;font-weight:700;color:var(--text-muted);">{{ data.empty }}</div>
+                        <div style="font-size:10px;color:var(--text-muted);">Empty</div>
+                    </div>
+                    <div
+                        style="flex:1;background:rgba(59,130,246,0.1);border-radius:6px;padding:6px 8px;text-align:center;">
+                        <div style="font-size:16px;font-weight:700;color:#3b82f6;">{{ data.warehouse }}</div>
+                        <div style="font-size:10px;color:#3b82f6;">In Stock</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ── Filters ──────────────────────────────────────────────── -->
+<div class="search-bar mb-4">
+    <form method="GET" action="{{ url_for('tanks.index') }}">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search Code / Serial</label>
+                <input type="text" name="search" class="form-control" placeholder="e.g. GP-11KG or serial"
+                    value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Size</label>
+                <select name="size" class="form-select">
+                    <option value="">All Sizes</option>
+                    {% for s in ['11kg', '11kg Fiber', '22kg', '50kg', 'Industrial'] %}
+                    <option value="{{ s }}" {% if size==s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    {% for s in ['Full','Empty','For Refill','Under Repair','Lost'] %}
+                    <option value="{{ s }}" {% if status==s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Location</label>
+                <select name="location" class="form-select">
+                    <option value="">All Locations</option>
+                    {% for l in ['Warehouse','With Consumer','At Plant','In Transit'] %}
+                    <option value="{{ l }}" {% if location==l %}selected{% endif %}>{{ l }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Filter</button>
+                <a href="{{ url_for('tanks.index') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ── Table ────────────────────────────────────────────────── -->
+<div class="card">
+    <div class="card-header">
+        <span>Tank List — {{ tanks.total }} cylinder(s)</span>
+        <a href="{{ url_for('tanks.create') }}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add
+            More Tanks</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
+                        <th>#</th>
+                        <th>Internal Code / Serial</th>
+                        <th>Size</th>
+                        <th>Brand</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>With / At</th>
+                        <th>Last Movement</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tank in tanks.items %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input tank-checkbox" value="{{ tank.id }}">
+                        </td>
+                        <td style="color:var(--text-label);font-size:12px;">{{ tank.id }}</td>
+                        <td>
+                            <a href="{{ url_for('tanks.view', id=tank.id) }}"
+                                style="color:var(--primary);font-weight:600;font-size:13px;text-decoration:none;">
+                                {{ tank.serial_number }}
+                            </a>
+                            {% if not tank.has_serial_number %}
+                            <span class="ms-1"
+                                style="font-size:10px;background:rgba(148,163,184,0.1);color:var(--text-muted);padding:2px 5px;border-radius:4px;">auto</span>
+                            {% else %}
+                            <span class="ms-1"
+                                style="font-size:10px;background:rgba(34,197,94,0.1);color:#22c55e;padding:2px 5px;border-radius:4px;">serial</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge"
+                                style="background:rgba(249,115,22,0.15);color:var(--primary);font-size:12px;">{{
+                                tank.tank_size }}</span>
+                        </td>
+                        <td style="color:var(--text-muted);font-size:13px;">{{ tank.brand or '—' }}</td>
+                        <td><span class="badge badge-custom badge-status-{{ tank.status }}">{{ tank.status }}</span>
+                        </td>
+                        <td><span class="badge badge-custom badge-loc-{{ tank.location }}">{{ tank.location }}</span>
+                        </td>
+                        <td style="font-size:12px;color:var(--text-muted);">
+                            {% if tank.current_consumer %}{{ tank.current_consumer.business_name }}
+                            {% elif tank.current_plant %}{{ tank.current_plant.plant_name }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td style="font-size:11px;color:var(--text-muted);">
+                            {{ tank.last_transaction_date.strftime('%b %d, %Y') if tank.last_transaction_date else '—'
+                            }}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('tanks.view', id=tank.id) }}"
+                                class="btn btn-sm btn-outline-primary me-1" title="View"><i class="bi bi-eye"></i></a>
+                            <a href="{{ url_for('tanks.edit', id=tank.id) }}"
+                                class="btn btn-sm btn-outline-primary me-1" title="Edit"><i
+                                    class="bi bi-pencil"></i></a>
+                            {% if current_user.role == 'admin' %}
+                            <form method="POST" action="{{ url_for('tanks.delete', id=tank.id) }}" class="d-inline"
+                                onsubmit="return confirm('Deactivate this tank?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i
+                                        class="bi bi-trash"></i></button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center py-5" style="color:var(--text-muted);">
+                            <i class="bi bi-database"
+                                style="font-size:40px;opacity:0.3;display:block;margin-bottom:8px;"></i>
+                            No tanks found. <a href="{{ url_for('tanks.create') }}">Add tanks now.</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="bulkActions" class="mt-3 p-3 bg-light rounded border d-none">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <span id="selectedCount" class="fw-bold text-primary">0</span> items selected
+        </div>
+        <div>
+            {% if current_user.role == 'admin' %}
+            <button id="bulkDelete" class="btn btn-danger">
+                <i class="bi bi-trash me-1"></i>Deactivate Selected
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if tanks.pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination pagination-sm">
+        {% if tanks.has_prev %}
+        <li class="page-item"><a class="page-link"
+                href="?page={{ tanks.prev_num }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}">‹</a>
+        </li>
+        {% endif %}
+        {% for p in tanks.iter_pages() %}
+        {% if p %}
+        <li class="page-item {% if p == tanks.page %}active{% endif %}">
+            <a class="page-link"
+                href="?page={{ p }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}">{{
+                p }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        {% if tanks.has_next %}
+        <li class="page-item"><a class="page-link"
+                href="?page={{ tanks.next_num }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}">›</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    const $selectAll = $('#selectAll');
+    const $checkboxes = $('.tank-checkbox');
+    const $bulkActions = $('#bulkActions');
+    const $selectedCount = $('#selectedCount');
+    const $bulkDelete = $('#bulkDelete');
+
+    function updateBulkActions() {
+        const checkedCount = $('.tank-checkbox:checked').length;
+        $selectedCount.text(checkedCount);
+        if (checkedCount > 0) {
+            $bulkActions.removeClass('d-none');
+        } else {
+            $bulkActions.addClass('d-none');
+        }
+    }
+
+    $selectAll.on('change', function() {
+        $checkboxes.prop('checked', this.checked);
+        updateBulkActions();
+    });
+
+    $checkboxes.on('change', function() {
+        if (!this.checked) {
+            $selectAll.prop('checked', false);
+        } else {
+            if ($('.tank-checkbox:checked').length === $checkboxes.length) {
+                $selectAll.prop('checked', true);
+            }
+        }
+        updateBulkActions();
+    });
+
+    $bulkDelete.on('click', function() {
+        const selectedIds = $('.tank-checkbox:checked').map(function() {
+            return this.value;
+        }).get();
+
+        if (selectedIds.length === 0) return;
+
+        if (confirm(`Are you sure you want to deactivate ${selectedIds.length} tanks?`)) {
+            $.ajax({
+                url: "{{ url_for('tanks.batch_delete') }}",
+                method: "POST",
+                data: { ids: selectedIds },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = response.redirect;
+                    } else {
+                        alert(response.message || 'Error occurred');
+                    }
+                },
+                error: function() {
+                    alert('Server error occurred');
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-bar-chart-line me-2" style="color:var(--primary)"></i>Reports Center</h1>
+    </div>
+</div>
+<div class="row g-3">
+    {% for name, icon, url, color, desc in [
+    ('Sales Report','graph-up-arrow','reports.sales','#3b82f6','Daily, monthly, custom date range'),
+    ('Tank Movement','arrow-repeat','reports.tank_movement','#f59e0b','Full tank location history'),
+    ('Tank Status Summary','pie-chart','reports.tank_status','#22c55e','Breakdown by size, status, location'),
+    ('Outstanding Balances','exclamation-triangle','reports.outstanding','#ef4444','Unpaid invoices and aging'),
+    ('Audit Trail','shield-check','reports.audit_trail','#a855f7','System activity log'),
+    ] %}
+    <div class="col-md-4">
+        <a href="{{ url_for(url) }}" class="card text-decoration-none" style="transition:all 0.3s;">
+            <div class="card-body d-flex align-items-center gap-3 py-4">
+                <div
+                    style="width:52px;height:52px;background:color-mix(in srgb,{{ color }} 15%,transparent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;color:{{ color }};flex-shrink:0;">
+                    <i class="bi bi-{{ icon }}"></i>
+                </div>
+                <div>
+                    <div style="font-weight:700;font-size:15px;color:var(--text-primary);">{{ name }}</div>
+                    <div style="font-size:12px;color:var(--text-muted);">{{ desc }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

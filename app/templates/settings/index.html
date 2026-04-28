@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}System Settings{% endblock %}
+{% block page_title %}General Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-gear-fill me-2" style="color:var(--primary)"></i>System Configuration</h1>
+        <p>Manage application-wide business information and processing rules</p>
+    </div>
+</div>
+
+<div class="row">
+    <form method="POST" class="col-12">
+        <!-- Header with global save -->
+        <div class="card bg-glass mb-4 border-0 shadow-sm">
+            <div class="card-body py-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="stat-ring me-3" style="--pct: 100%; width: 50px; height: 50px; min-width: 50px;">
+                        <span><i class="bi bi-gear-wide-connected text-primary fs-5"></i></span>
+                    </div>
+                    <div>
+                        <h2 class="h5 mb-1">System Control</h2>
+                        <p class="text-muted small mb-0">Modify labels, behavior, and system thresholds.</p>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary px-5 shadow">
+                    <i class="bi bi-save me-2"></i> Save All Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs border-0 mb-4 bg-glass rounded-3 p-1 px-3 shadow-sm" id="settingsTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active border-0 px-4 py-2" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
+                    <i class="bi bi-shop me-2"></i>General
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link border-0 px-4 py-2" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
+                    <i class="bi bi-tags me-2"></i>Inventory Lists
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link border-0 px-4 py-2" id="rules-tab" data-bs-toggle="tab" data-bs-target="#rules" type="button" role="tab">
+                    <i class="bi bi-sliders2 me-2"></i>Rules & Features
+                </button>
+            </li>
+            <li class="nav-item ms-auto">
+                <button class="nav-link border-0 px-4 py-2 text-primary fw-bold" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced" type="button" role="tab" style="background: rgba(var(--primary-rgb), 0.1);">
+                    <i class="bi bi-lightning-charge-fill me-2"></i>Advanced Features
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content border-0" id="settingsTabsContent">
+            <!-- GENERAL TAB -->
+            <div class="tab-pane fade show active" id="general" role="tabpanel">
+                <div class="card border-0 shadow-sm bg-glass">
+                    <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                        <h6 class="mb-0 fw-bold">Business Information</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            {% for s in settings if s.key in ['Business Name', 'Business Address', 'Contact Number', 'VAT Rate', 'Currency Symbol'] %}
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label small fw-bold mb-1">{{ s.key }}</label>
+                                {% if s.key == 'Business Address' %}
+                                <textarea name="setting_{{ s.key }}" class="form-control" rows="2">{{ s.value }}</textarea>
+                                {% else %}
+                                <input type="text" name="setting_{{ s.key }}" class="form-control" value="{{ s.value }}">
+                                {% endif %}
+                                <div class="form-text mt-1">{{ s.description }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INVENTORY TAB -->
+            <div class="tab-pane fade" id="inventory" role="tabpanel">
+                <div class="card border-0 shadow-sm bg-glass">
+                    <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                        <h6 class="mb-0 fw-bold">Labels & Statuses</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            {% for s in settings if 'Sizes' in s.key or 'Categories' in s.key or 'Statuses' in s.key or 'Locations' in s.key or 'Types' in s.key or 'Methods' in s.key %}
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label small fw-bold mb-1">{{ s.key }}</label>
+                                <input type="text" name="setting_{{ s.key }}" class="form-control" value="{{ s.value }}">
+                                <div class="form-text mt-1 fst-italic"><i class="bi bi-info-circle me-1"></i>Comma separated: {{ s.description }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RULES TAB -->
+            <div class="tab-pane fade" id="rules" role="tabpanel">
+                <div class="card border-0 shadow-sm bg-glass">
+                    <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                        <h6 class="mb-0 fw-bold">Behavioral Settings</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            {% for s in settings if s.key in ['Low Stock Threshold', 'Enable Serial Tracking', 'Maintenance Mode', 'Lost Status Name', 'Warehouse Location Name'] %}
+                            <div class="col-md-4 mb-4">
+                                <label class="form-label small fw-bold mb-1">{{ s.key }}</label>
+                                {% if s.key in ['Enable Serial Tracking', 'Maintenance Mode'] %}
+                                <select name="setting_{{ s.key }}" class="form-select">
+                                    <option value="True" {% if s.value == 'True' %}selected{% endif %}>Enabled</option>
+                                    <option value="False" {% if s.value == 'False' %}selected{% endif %}>Disabled</option>
+                                </select>
+                                {% else %}
+                                <input type="text" name="setting_{{ s.key }}" class="form-control" value="{{ s.value }}">
+                                {% endif %}
+                                <div class="form-text mt-1">{{ s.description }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADVANCED TAB -->
+            <div class="tab-pane fade" id="advanced" role="tabpanel">
+                <div class="row g-4">
+                    <!-- Billing Patterns -->
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm bg-glass h-100">
+                            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                                <h6 class="mb-0 fw-bold"><i class="bi bi-receipt-cutoff me-2"></i>Invoice & Billing</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                {% for s in settings if s.key in ['Invoice Prefix', 'Invoice Number Depth'] %}
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold mb-1">{{ s.key }}</label>
+                                    <input type="text" name="setting_{{ s.key }}" class="form-control" value="{{ s.value }}">
+                                    <div class="form-text mt-1">{{ s.description }}</div>
+                                </div>
+                                {% endfor %}
+                                <div class="alert alert-warning py-2 mb-0" style="font-size: 11px;">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Changing Invoice Prefix will affect all <strong>future</strong> transactions. Current invoices remain untouched.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System & Theme -->
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm bg-glass h-100">
+                            <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                                <h6 class="mb-0 fw-bold"><i class="bi bi-palette me-2"></i>Theme & Security</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                {% for s in settings if s.key in ['Primary Color', 'Session Timeout', 'Log Retention Days', 'Auto-Serial Prefix'] %}
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold mb-1">{{ s.key }}</label>
+                                    {% if s.key == 'Primary Color' %}
+                                    <div class="input-group">
+                                        <input type="color" name="setting_{{ s.key }}" class="form-control form-control-color" value="{{ s.value }}" style="max-width: 60px;">
+                                        <input type="text" name="setting_{{ s.key }}_val" class="form-control" value="{{ s.value }}" disabled>
+                                    </div>
+                                    {% else %}
+                                    <input type="text" name="setting_{{ s.key }}" class="form-control" value="{{ s.value }}">
+                                    {% endif %}
+                                    <div class="form-text mt-1">{{ s.description }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .last-child-mb-0:last-child { margin-bottom: 0 !important; }
+</style>
+{% endblock %}

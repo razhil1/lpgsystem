@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Consumer{% endblock %}
+{% block page_title %}{{ action }} Consumer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-person-plus me-2" style="color:var(--primary)"></i>{{ action }} Consumer</h1>
+    </div>
+    <a href="{{ url_for('consumers.index') }}" class="btn btn-outline-secondary"><i
+            class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><span>Consumer Information</span></div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Business Name *</label>
+                            <input type="text" name="business_name" class="form-control" required
+                                value="{{ consumer.business_name if consumer else '' }}"
+                                placeholder="Full business name">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Consumer Type *</label>
+                            <select name="consumer_type" class="form-select" required>
+                                {% set c_types = get_setting('Consumer Types', is_list=True) %}
+                                {% for t in c_types %}
+                                <option value="{{ t }}" {% if consumer and consumer.consumer_type==t %}selected{% elif
+                                    not consumer and t == (c_types[-1] if c_types else 'End-User') %}selected{% endif %}>{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Person</label>
+                            <input type="text" name="contact_person" class="form-control"
+                                value="{{ consumer.contact_person if consumer else '' }}" placeholder="Full name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control"
+                                value="{{ consumer.phone if consumer else '' }}" placeholder="09XX-XXX-XXXX">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control"
+                                value="{{ consumer.email if consumer else '' }}" placeholder="email@example.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Credit Limit (₱)</label>
+                            <input type="number" step="0.01" name="credit_limit" class="form-control"
+                                value="{{ consumer.credit_limit if consumer else '0.00' }}" placeholder="0.00">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" class="form-control" rows="2"
+                                placeholder="Complete address">{{ consumer.address if consumer else '' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="2"
+                                placeholder="Optional notes">{{ consumer.notes if consumer else '' }}</textarea>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>{{ action }} Consumer
+                        </button>
+                        <a href="{{ url_for('consumers.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

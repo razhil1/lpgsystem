@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LPG Distribution Management System for Gas Pinas Inc.">
+    <title>{% block title %}{{ get_setting('Business Name') }}{% endblock %} | LPG Management System</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- DataTables -->
+    <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <!-- Theme Initialization Script (Prevents FOUC) -->
+    <script>
+        (function () {
+            var storedTheme = localStorage.getItem('app_theme');
+            if (storedTheme) {
+                document.documentElement.setAttribute('data-theme', storedTheme);
+                document.documentElement.setAttribute('data-bs-theme', storedTheme);
+            } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        })();
+    </script>
+
+    {% set primary_color = get_setting('Primary Color', default='#f97316') %}
+    <style>
+        :root {
+            --primary: {{ primary_color }};
+            --primary-dark: color-mix(in srgb, {{ primary_color }}, black 20%);
+            --primary-light: color-mix(in srgb, {{ primary_color }}, white 80%);
+            --primary-rgb: {{ primary_color[1:3]|int(base=16) }}, {{ primary_color[3:5]|int(base=16) }}, {{ primary_color[5:7]|int(base=16) }};
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+            border: none !important;
+        }
+        .nav-item.active {
+            border-left-color: var(--primary) !important;
+            color: var(--primary) !important;
+        }
+        .text-primary { color: var(--primary) !important; }
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+
+    {% if current_user.is_authenticated %}
+    <!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <i class="bi bi-fire"></i>
+            </div>
+            <div class="brand-text">
+                <span class="brand-title">{{ get_setting('Business Name') }}</span>
+                <span class="brand-sub">LPG Management</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="{{ url_for('dashboard.index') }}"
+                class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="nav-section-label">Inventory</div>
+            <a href="{{ url_for('tanks.index') }}"
+                class="nav-item {% if 'tanks.' in (request.endpoint or '') %}active{% endif %}">
+                <i class="bi bi-database"></i>
+                <span>Tank Registry</span>
+            </a>
+            <a href="{{ url_for('consumers.index') }}"
+                class="nav-item {% if 'consumers.' in (request.endpoint or '') %}active{% endif %}">
+                <i class="bi bi-people"></i>
+                <span>Consumers</span>
+            </a>
+            <a href="{{ url_for('plants.index') }}"
+                class="nav-item {% if 'plants.' in (request.endpoint or '') %}active{% endif %}">
+                <i class="bi bi-building"></i>
+                <span>Refill Plants</span>
+            </a>
+
+            <div class="nav-section-label">Transactions</div>
+            <a href="{{ url_for('transactions.index') }}"
+                class="nav-item {% if request.endpoint == 'transactions.index' %}active{% endif %}">
+                <i class="bi bi-arrow-left-right"></i>
+                <span>All Transactions</span>
+            </a>
+            <a href="{{ url_for('transactions.create_delivery') }}"
+                class="nav-item {% if request.endpoint == 'transactions.create_delivery' %}active{% endif %}">
+                <i class="bi bi-truck"></i>
+                <span>New Delivery</span>
+            </a>
+            <a href="{{ url_for('transactions.create_return') }}"
+                class="nav-item {% if request.endpoint == 'transactions.create_return' %}active{% endif %}">
+                <i class="bi bi-box-arrow-in-left"></i>
+                <span>Tank Return</span>
+            </a>
+            <a href="{{ url_for('transactions.create_plant_out') }}"
+                class="nav-item {% if request.endpoint == 'transactions.create_plant_out' %}active{% endif %}">
+                <i class="bi bi-arrow-up-circle"></i>
+                <span>Send to Plant</span>
+            </a>
+            <a href="{{ url_for('transactions.create_plant_in') }}"
+                class="nav-item {% if request.endpoint == 'transactions.create_plant_in' %}active{% endif %}">
+                <i class="bi bi-arrow-down-circle"></i>
+                <span>Receive from Plant</span>
+            </a>
+
+            <div class="nav-section-label">Reports</div>
+            <a href="{{ url_for('reports.sales') }}"
+                class="nav-item {% if request.endpoint == 'reports.sales' %}active{% endif %}">
+                <i class="bi bi-graph-up-arrow"></i>
+                <span>Sales Report</span>
+            </a>
+            <a href="{{ url_for('reports.tank_movement') }}"
+                class="nav-item {% if request.endpoint == 'reports.tank_movement' %}active{% endif %}">
+                <i class="bi bi-arrow-repeat"></i>
+                <span>Tank Movement</span>
+            </a>
+            <a href="{{ url_for('reports.tank_status') }}"
+                class="nav-item {% if request.endpoint == 'reports.tank_status' %}active{% endif %}">
+                <i class="bi bi-pie-chart"></i>
+                <span>Tank Status</span>
+            </a>
+            <a href="{{ url_for('reports.outstanding') }}"
+                class="nav-item {% if request.endpoint == 'reports.outstanding' %}active{% endif %}">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Outstanding</span>
+            </a>
+            <a href="{{ url_for('reports.missing_tanks') }}"
+                class="nav-item {% if request.endpoint == 'reports.missing_tanks' %}active{% endif %}">
+                <i class="bi bi-search"></i>
+                <span>Missing Tanks</span>
+            </a>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('reports.audit_trail') }}"
+                class="nav-item {% if request.endpoint == 'reports.audit_trail' %}active{% endif %}">
+                <i class="bi bi-shield-check"></i>
+                <span>Audit Trail</span>
+            </a>
+            <a href="{{ url_for('settings.index') }}"
+                class="nav-item {% if request.endpoint == 'settings.index' %}active{% endif %}"
+                style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <i class="bi bi-gear-fill"></i>
+                <span>System Settings</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('export.index') }}"
+                class="nav-item {% if 'export.' in (request.endpoint or '') %}active{% endif %}"
+                style="border: 1px dashed rgba(37,99,235,0.4);">
+                <i class="bi bi-cloud-arrow-down" style="color:#2563eb;"></i>
+                <span style="color:#2563eb; font-weight:700;">Export Center</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">{{ current_user.full_name[0].upper() }}</div>
+                <div class="user-details">
+                    <span class="user-name">{{ current_user.full_name }}</span>
+                    <span class="user-role badge-role-{{ current_user.role }}">{{ current_user.role|title }}</span>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="btn-logout" title="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- ═══ MAIN CONTENT ═══════════════════════════════════════════════════════ -->
+    <div class="main-content" id="mainContent">
+        <!-- Topbar -->
+        <div class="topbar">
+            <button class="btn-toggle-sidebar" id="toggleSidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+            <div class="topbar-right">
+                <button class="btn-theme-toggle" id="themeToggle" title="Toggle Theme">
+                    <i class="bi bi-brightness-high-fill"></i>
+                </button>
+                <span class="topbar-date">
+                    <i class="bi bi-calendar3"></i>
+                    <span id="currentDateTime"></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        <div class="flash-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <i
+                    class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}x-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endwith %}
+        </div>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    {% else %}
+    {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

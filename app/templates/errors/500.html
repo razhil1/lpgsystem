@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Server Error{% endblock %}
+{% block page_title %}500 - Server Error{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white border-0 py-3">
+                    <h4 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Something went wrong</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="fs-5 text-muted">The server encountered an internal error and was unable to complete your request.</p>
+                    
+                    {% if error %}
+                    <div class="alert alert-warning mb-4">
+                        <strong class="text-dark">Error Message:</strong> <br>
+                        <code>{{ error }}</code>
+                    </div>
+                    {% endif %}
+
+                    {% if traceback %}
+                    <div class="card bg-dark text-light border-0">
+                        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                            <span class="font-monospace small">Stack Trace (For Debugging)</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="navigator.clipboard.writeText(document.getElementById('traceback').innerText)">
+                                <i class="bi bi-clipboard me-1"></i>Copy
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <pre id="traceback" class="p-3 m-0" style="overflow-x: auto; font-size: 12px;"><code>{{ traceback }}</code></pre>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4 text-center">
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
+                            <i class="bi bi-house me-1"></i>Return to Dashboard
+                        </a>
+                        <button onclick="window.history.back()" class="btn btn-outline-secondary ms-2">
+                            <i class="bi bi-arrow-left me-1"></i>Go Back
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

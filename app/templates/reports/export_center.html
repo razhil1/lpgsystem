@@ -1,0 +1,656 @@
+{% extends "base.html" %}
+{% block title %}Export Center{% endblock %}
+{% block page_title %}Export Center{% endblock %}
+
+{% block head %}
+<style>
+    /* ═══ Export Center Styles ═══════════════════════════════════════════ */
+    .export-hero {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+        border-radius: 16px;
+        padding: 28px 32px;
+        color: #fff;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .export-hero-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        flex-shrink: 0;
+    }
+
+    .export-hero h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin: 0 0 4px;
+    }
+
+    .export-hero p {
+        margin: 0;
+        opacity: 0.85;
+        font-size: 0.92rem;
+    }
+
+    /* Period pill selector */
+    .period-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+    }
+
+    .period-pill {
+        padding: 5px 14px;
+        border-radius: 20px;
+        border: 2px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text-secondary);
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s;
+        text-decoration: none;
+    }
+
+    .period-pill:hover,
+    .period-pill.active {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    /* Export cards */
+    .export-section {
+        margin-bottom: 32px;
+    }
+
+    .export-section-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .export-section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .export-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 22px;
+        transition: all 0.22s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .export-card:hover {
+        border-color: #2563eb;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .export-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 12px;
+        flex-shrink: 0;
+    }
+
+    .export-card h6 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin: 0 0 4px;
+        color: var(--text-primary);
+    }
+
+    .export-card p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin: 0 0 auto;
+        line-height: 1.45;
+    }
+
+    /* Period radio group inside card */
+    .period-group {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    .period-group label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .period-btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+    .period-btn {
+        padding: 3px 10px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .period-btn:hover,
+    .period-btn.selected {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    /* Custom date row */
+    .custom-dates {
+        display: none;
+        gap: 6px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    .custom-dates.visible {
+        display: flex;
+    }
+
+    .custom-dates input {
+        flex: 1;
+        min-width: 120px;
+        font-size: 0.78rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--input-bg, var(--card-bg));
+        color: var(--text-primary);
+    }
+
+    /* Download button */
+    .btn-export {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1e3a5f, #2563eb);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.84rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .btn-export:hover {
+        background: linear-gradient(135deg, #1e3a5f, #1d4ed8);
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-export i {
+        font-size: 1rem;
+    }
+
+    /* Quick links strip */
+    .quick-strip {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .quick-strip-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+    }
+
+    .quick-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 13px;
+        border-radius: 8px;
+        background: rgba(37, 99, 235, 0.08);
+        color: #2563eb;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        transition: all 0.15s;
+    }
+
+    .quick-link:hover {
+        background: #2563eb;
+        color: #fff;
+        border-color: #2563eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero Banner -->
+<div class="export-hero">
+    <div class="export-hero-icon">
+        <i class="bi bi-cloud-arrow-down"></i>
+    </div>
+    <div>
+        <h1>Export Center</h1>
+        <p>Download reports as Excel (.xlsx) files — Daily, Weekly, Monthly, Yearly or Custom date range.</p>
+    </div>
+</div>
+
+<!-- Quick Export Strip -->
+<div class="quick-strip mb-4">
+    <span class="quick-strip-label"><i class="bi bi-lightning me-1"></i> Quick Exports (Today):</span>
+    <a class="quick-link" href="{{ url_for('export.sales', period='daily') }}">
+        <i class="bi bi-file-earmark-excel"></i> Today's Sales
+    </a>
+    <a class="quick-link" href="{{ url_for('export.transactions', period='daily') }}">
+        <i class="bi bi-file-earmark-excel"></i> Today's Transactions
+    </a>
+    <a class="quick-link" href="{{ url_for('export.outstanding') }}">
+        <i class="bi bi-file-earmark-excel"></i> Outstanding Balances
+    </a>
+    <a class="quick-link" href="{{ url_for('export.tanks') }}">
+        <i class="bi bi-file-earmark-excel"></i> Tank Inventory
+    </a>
+    <a class="quick-link" href="{{ url_for('export.summary', period='monthly') }}">
+        <i class="bi bi-file-earmark-excel"></i> Monthly Summary
+    </a>
+</div>
+
+<!-- ═══ FINANCIAL REPORTS ════════════════════════════════════════════ -->
+<div class="export-section">
+    <div class="export-section-title"><i class="bi bi-cash-coin"></i> Financial Reports</div>
+    <div class="row g-3">
+
+        <!-- Sales Report -->
+        <div class="col-md-4">
+            <div class="export-card">
+                <div class="export-card-icon" style="background:#dbeafe; color:#2563eb;">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h6>Sales Report</h6>
+                <p>Delivery transactions with amounts, payments, and outstanding balance per period.</p>
+                <div class="period-group">
+                    <label>Select Period</label>
+                    <div class="period-btn-group" id="sales-periods">
+                        <button class="period-btn selected" data-period="daily">Daily</button>
+                        <button class="period-btn" data-period="weekly">Weekly</button>
+                        <button class="period-btn" data-period="monthly">Monthly</button>
+                        <button class="period-btn" data-period="yearly">Yearly</button>
+                        <button class="period-btn" data-period="custom">Custom</button>
+                    </div>
+                    <div class="custom-dates" id="sales-custom">
+                        <input type="date" id="sales-from" placeholder="From">
+                        <input type="date" id="sales-to" placeholder="To">
+                    </div>
+                    <a href="#" class="btn-export" id="btn-sales"
+                        onclick="doExport('sales','sales','sales-periods','sales-from','sales-to'); return false;">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Outstanding Balances -->
+        <div class="col-md-4">
+            <div class="export-card">
+                <div class="export-card-icon" style="background:#fee2e2; color:#ef4444;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <h6>Outstanding Balances</h6>
+                <p>All unpaid and partially paid invoices with days-outstanding aging analysis.</p>
+                <div class="period-group" style="margin-top:auto;">
+                    <p class="mb-2" style="font-size:0.78rem; color:var(--text-muted);">Always exports current snapshot
+                        (all unpaid invoices as of today).</p>
+                    <a href="{{ url_for('export.outstanding') }}" class="btn-export"
+                        style="background:linear-gradient(135deg,#7f1d1d,#ef4444);">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Report -->
+        <div class="col-md-4">
+            <div class="export-card">
+                <div class="export-card-icon" style="background:#f0fdf4; color:#22c55e;">
+                    <i class="bi bi-clipboard-data"></i>
+                </div>
+                <h6>Summary Dashboard</h6>
+                <p>Single-sheet overview — sales totals, tank inventory counts, outstanding summary.</p>
+                <div class="period-group">
+                    <label>Select Period</label>
+                    <div class="period-btn-group" id="summary-periods">
+                        <button class="period-btn" data-period="daily">Daily</button>
+                        <button class="period-btn" data-period="weekly">Weekly</button>
+                        <button class="period-btn selected" data-period="monthly">Monthly</button>
+                        <button class="period-btn" data-period="yearly">Yearly</button>
+                        <button class="period-btn" data-period="custom">Custom</button>
+                    </div>
+                    <div class="custom-dates" id="summary-custom">
+                        <input type="date" id="summary-from" placeholder="From">
+                        <input type="date" id="summary-to" placeholder="To">
+                    </div>
+                    <a href="#" class="btn-export" id="btn-summary"
+                        onclick="doExport('summary','summary','summary-periods','summary-from','summary-to'); return false;"
+                        style="background:linear-gradient(135deg,#166534,#22c55e);">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══ TRANSACTION REPORTS ══════════════════════════════════════════ -->
+<div class="export-section">
+    <div class="export-section-title"><i class="bi bi-arrow-left-right"></i> Transaction Reports</div>
+    <div class="row g-3">
+
+        <!-- All Transactions -->
+        <div class="col-md-6">
+            <div class="export-card">
+                <div class="export-card-icon" style="background:#ede9fe; color:#8b5cf6;">
+                    <i class="bi bi-list-columns-reverse"></i>
+                </div>
+                <h6>All Transactions</h6>
+                <p>Complete ledger — Deliveries, Returns, Plant IN/OUT — with filter by type.</p>
+                <div class="period-group">
+                    <div class="mb-2">
+                        <label>Filter Type</label>
+                        <select id="txn-type" class="form-select form-select-sm" style="font-size:0.8rem;">
+                            <option value="">All Types</option>
+                            <option value="Delivery">Delivery</option>
+                            <option value="Return">Return</option>
+                            <option value="Plant OUT">Plant OUT</option>
+                            <option value="Plant IN">Plant IN</option>
+                        </select>
+                    </div>
+                    <label>Select Period</label>
+                    <div class="period-btn-group" id="txn-periods">
+                        <button class="period-btn" data-period="daily">Daily</button>
+                        <button class="period-btn" data-period="weekly">Weekly</button>
+                        <button class="period-btn selected" data-period="monthly">Monthly</button>
+                        <button class="period-btn" data-period="yearly">Yearly</button>
+                        <button class="period-btn" data-period="custom">Custom</button>
+                    </div>
+                    <div class="custom-dates" id="txn-custom">
+                        <input type="date" id="txn-from" placeholder="From">
+                        <input type="date" id="txn-to" placeholder="To">
+                    </div>
+                    <a href="#" class="btn-export" onclick="doExportTxn(); return false;"
+                        style="background:linear-gradient(135deg,#4c1d95,#8b5cf6);">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tank Movement -->
+        <div class="col-md-6">
+            <div class="export-card">
+                <div class="export-card-icon" style="background:#fff7ed; color:#f59e0b;">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+                <h6>Tank Movement History</h6>
+                <p>Full audit trail of every tank's location changes — dispatched, returned, refilled.</p>
+                <div class="period-group">
+                    <label>Select Period</label>
+                    <div class="period-btn-group" id="move-periods">
+                        <button class="period-btn" data-period="daily">Daily</button>
+                        <button class="period-btn" data-period="weekly">Weekly</button>
+                        <button class="period-btn selected" data-period="monthly">Monthly</button>
+                        <button class="period-btn" data-period="yearly">Yearly</button>
+                        <button class="period-btn" data-period="custom">Custom</button>
+                    </div>
+                    <div class="custom-dates" id="move-custom">
+                        <input type="date" id="move-from" placeholder="From">
+                        <input type="date" id="move-to" placeholder="To">
+                    </div>
+                    <a href="#" class="btn-export"
+                        onclick="doExport('tank-movement','export','move-periods','move-from','move-to'); return false;"
+                        style="background:linear-gradient(135deg,#78350f,#f59e0b);">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══ INVENTORY REPORTS ═════════════════════════════════════════════ -->
+<div class="export-section">
+    <div class="export-section-title"><i class="bi bi-box-seam"></i> Inventory Reports</div>
+    <div class="row g-3">
+
+        <!-- Tank Inventory -->
+        <div class="col-md-6">
+            <div class="export-card">
+                <div class="export-card-icon" style="background:#ecfdf5; color:#10b981;">
+                    <i class="bi bi-database"></i>
+                </div>
+                <h6>Tank Inventory</h6>
+                <p>Full list of all active tanks with serial, size, status, location, and costs.</p>
+                <div class="period-group">
+                    <div class="row g-2 mb-2">
+                        <div class="col">
+                            <label style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">Filter
+                                Status</label>
+                            <select id="tank-status" class="form-select form-select-sm" style="font-size:0.8rem;">
+                                <option value="">All Status</option>
+                                <option value="Full">Full</option>
+                                <option value="Empty">Empty</option>
+                                <option value="For Refill">For Refill</option>
+                                <option value="Under Repair">Under Repair</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">Filter
+                                Location</label>
+                            <select id="tank-location" class="form-select form-select-sm" style="font-size:0.8rem;">
+                                <option value="">All Locations</option>
+                                <option value="Warehouse">Warehouse</option>
+                                <option value="With Consumer">With Consumer</option>
+                                <option value="At Plant">At Plant</option>
+                            </select>
+                        </div>
+                    </div>
+                    <a href="#" class="btn-export" onclick="doExportTanks(); return false;"
+                        style="background:linear-gradient(135deg,#064e3b,#10b981);">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumers List -->
+        <div class="col-md-6">
+            <div class="export-card">
+                <div class="export-card-icon" style="background:#f0f9ff; color:#0ea5e9;">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h6>Consumer Masterlist</h6>
+                <p>All active consumers with contact info, credit limits, and outstanding balances.</p>
+                <div class="period-group" style="margin-top:auto;">
+                    <p class="mb-2" style="font-size:0.78rem; color:var(--text-muted);">Always exports the current
+                        active consumer list.</p>
+                    <a href="{{ url_for('export.consumers') }}" class="btn-export"
+                        style="background:linear-gradient(135deg,#0c4a6e,#0ea5e9);">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══ SYSTEM REPORTS (Admin only) ══════════════════════════════════ -->
+{% if current_user.role == 'admin' %}
+<div class="export-section">
+    <div class="export-section-title"><i class="bi bi-shield-lock"></i> System Reports (Admin Only)</div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="export-card" style="border-color:#a855f7;">
+                <div class="export-card-icon" style="background:#faf5ff; color:#a855f7;">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h6>Audit Trail</h6>
+                <p>Full system activity log — who did what, when, and from which IP address.</p>
+                <div class="period-group">
+                    <label>Select Period</label>
+                    <div class="period-btn-group" id="audit-periods">
+                        <button class="period-btn" data-period="daily">Daily</button>
+                        <button class="period-btn" data-period="weekly">Weekly</button>
+                        <button class="period-btn selected" data-period="monthly">Monthly</button>
+                        <button class="period-btn" data-period="yearly">Yearly</button>
+                        <button class="period-btn" data-period="custom">Custom</button>
+                    </div>
+                    <div class="custom-dates" id="audit-custom">
+                        <input type="date" id="audit-from" placeholder="From">
+                        <input type="date" id="audit-to" placeholder="To">
+                    </div>
+                    <a href="#" class="btn-export"
+                        onclick="doExport('audit-trail','export','audit-periods','audit-from','audit-to'); return false;"
+                        style="background:linear-gradient(135deg,#581c87,#a855f7);">
+                        <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ── Period button selection & custom date toggle ─────────────────────
+    document.querySelectorAll('.period-btn-group').forEach(function (group) {
+        group.addEventListener('click', function (e) {
+            var btn = e.target.closest('.period-btn');
+            if (!btn) return;
+            group.querySelectorAll('.period-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+
+            // Show / hide custom date inputs
+            var groupId = group.id;                         // e.g. "sales-periods"
+            var prefix = groupId.replace('-periods', '');  // e.g. "sales"
+            var customEl = document.getElementById(prefix + '-custom');
+            if (customEl) {
+                customEl.classList.toggle('visible', btn.dataset.period === 'custom');
+            }
+        });
+    });
+
+    // ── Generic export builder ───────────────────────────────────────────
+    function getSelectedPeriod(groupId) {
+        var btn = document.querySelector('#' + groupId + ' .period-btn.selected');
+        return btn ? btn.dataset.period : 'monthly';
+    }
+
+    function doExport(endpoint, blueprint, groupId, fromId, toId) {
+        var period = getSelectedPeriod(groupId);
+        var url = '/export/' + endpoint + '?period=' + encodeURIComponent(period);
+        if (period === 'custom') {
+            var df = document.getElementById(fromId).value;
+            var dt = document.getElementById(toId).value;
+            if (!df || !dt) { alert('Please select both From and To dates.'); return; }
+            url += '&date_from=' + df + '&date_to=' + dt;
+        }
+        window.location.href = url;
+    }
+
+    // ── Transactions (has extra type filter) ─────────────────────────────
+    function doExportTxn() {
+        var period = getSelectedPeriod('txn-periods');
+        var txnType = document.getElementById('txn-type').value;
+        var url = '/export/transactions?period=' + encodeURIComponent(period);
+        if (txnType) url += '&type=' + encodeURIComponent(txnType);
+        if (period === 'custom') {
+            var df = document.getElementById('txn-from').value;
+            var dt = document.getElementById('txn-to').value;
+            if (!df || !dt) { alert('Please select both From and To dates.'); return; }
+            url += '&date_from=' + df + '&date_to=' + dt;
+        }
+        window.location.href = url;
+    }
+
+    // ── Tanks (has status + location filter) ─────────────────────────────
+    function doExportTanks() {
+        var status = document.getElementById('tank-status').value;
+        var location = document.getElementById('tank-location').value;
+        var url = '/export/tanks';
+        var params = [];
+        if (status) params.push('status=' + encodeURIComponent(status));
+        if (location) params.push('location=' + encodeURIComponent(location));
+        if (params.length) url += '?' + params.join('&');
+        window.location.href = url;
+    }
+
+    // Set today's date as default for custom inputs
+    var todayStr = new Date().toISOString().split('T')[0];
+    document.querySelectorAll('input[type="date"]').forEach(function (inp) {
+        if (inp.id.endsWith('-to')) inp.value = todayStr;
+        if (inp.id.endsWith('-from')) {
+            // default from = first of current month
+            var d = new Date();
+            d.setDate(1);
+            inp.value = d.toISOString().split('T')[0];
+        }
+    });
+</script>
+{% endblock %}

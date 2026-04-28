@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Sales Report{% endblock %}
+{% block page_title %}Sales Report{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-graph-up-arrow me-2" style="color:var(--primary)"></i>Sales Report</h1>
+        <p>Delivery transactions and revenue summary</p>
+    </div>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary"><i
+            class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<!-- Filters -->
+<div class="search-bar mb-4">
+    <form method="GET">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Date From</label>
+                <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date To</label>
+                <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Consumer</label>
+                <select name="consumer_id" class="form-select">
+                    <option value="">All Consumers</option>
+                    {% for c in consumers %}
+                    <option value="{{ c.id }}" {% if consumer_id==c.id|string %}selected{% endif %}>{{ c.business_name
+                        }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Generate</button>
+                <a href="{{ url_for('reports.sales') }}" class="btn btn-outline-secondary"><i
+                        class="bi bi-x-lg"></i></a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Summary KPIs -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="kpi-card" style="--kpi-color:#3b82f6">
+            <div class="kpi-icon"><i class="bi bi-receipt"></i></div>
+            <div class="kpi-data">
+                <div class="kpi-value">{{ transactions|length }}</div>
+                <div class="kpi-label">Total Invoices</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card" style="--kpi-color:#22c55e">
+            <div class="kpi-icon"><i class="bi bi-currency-exchange"></i></div>
+            <div class="kpi-data">
+                <div class="kpi-value">₱{{ "{:,.2f}".format(total_sales) }}</div>
+                <div class="kpi-label">Total Sales</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card" style="--kpi-color:#ef4444">
+            <div class="kpi-icon"><i class="bi bi-exclamation-circle"></i></div>
+            <div class="kpi-data">
+                <div class="kpi-value">₱{{ "{:,.2f}".format(total_outstanding) }}</div>
+                <div class="kpi-label">Outstanding</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><span>Sales Details</span></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Date</th>
+                        <th>Consumer</th>
+                        <th class="text-center">Qty</th>
+                        <th>Amount</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr>
+                        <td><code class="text-primary" style="font-size:11px;">{{ txn.invoice_no }}</code></td>
+                        <td style="font-size:12px;">{{ txn.transaction_date.strftime('%b %d, %Y') if txn.transaction_date else '—' }}</td>
+                        <td style="font-size:12px;">{{ txn.consumer.business_name if txn.consumer else '—' }}</td>
+                        <td class="text-center">{{ txn.total_qty }}</td>
+                        <td class="fw-bold">₱{{ "{:,.2f}".format(txn.total_amount or 0) }}</td>
+                        <td class="text-success">₱{{ "{:,.2f}".format(txn.amount_paid or 0) }}</td>
+                        <td class="fw-bold {{ 'text-danger' if txn.balance > 0 else 'text-success' }}">
+                            ₱{{ "{:,.2f}".format(txn.balance) }}</td>
+                        <td><span class="badge badge-custom badge-pay-{{ txn.payment_status }}">{{ txn.payment_status }}</span></td>
+                        <td>
+                            <a href="{{ url_for('transactions.view', id=txn.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                {% if transactions %}
+                <tfoot>
+                    <tr style="background:rgba(249,115,22,0.05);">
+                        <td colspan="4" class="fw-bold px-3 py-2">TOTAL SUMMARY</td>
+                        <td class="fw-bold" style="color:var(--primary);">₱{{ "{:,.2f}".format(total_sales) }}</td>
+                        <td class="fw-bold text-success">₱{{ "{:,.2f}".format(total_paid) }}</td>
+                        <td class="fw-bold text-danger">₱{{ "{:,.2f}".format(total_outstanding) }}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

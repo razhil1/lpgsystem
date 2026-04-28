@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Tank Status{% endblock %}
+{% block page_title %}Tank Status Summary{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-pie-chart me-2" style="color:var(--primary)"></i>Tank Status Summary</h1>
+    </div>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary"><i
+            class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<!-- By Location -->
+<div class="row g-3 mb-4">
+    {% for loc, count in location_summary.items() %}
+    <div class="col-md-3">
+        <div class="kpi-card" style="--kpi-color:
+            {% if loc == 'Warehouse' %}#3b82f6
+            {% elif loc == 'With Consumer' %}#22c55e
+            {% elif loc == 'At Plant' %}#f59e0b
+            {% else %}#a855f7{% endif %}">
+            <div class="kpi-icon">
+                <i
+                    class="bi bi-{% if loc == 'Warehouse' %}building{% elif loc == 'With Consumer' %}people{% elif loc == 'At Plant' %}gear{% else %}truck{% endif %}"></i>
+            </div>
+            <div class="kpi-data">
+                <div class="kpi-value">{{ count }}</div>
+                <div class="kpi-label">{{ loc }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- By Size & Status -->
+<div class="card">
+    <div class="card-header"><span>Status Breakdown by Tank Size</span></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Tank Size</th>
+                        {% for s in statuses %}
+                        <th class="text-center">{{ s }}</th>
+                        {% endfor %}
+                        <th class="text-center">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for size in sizes %}
+                    <tr>
+                        <td style="font-weight:700;color:var(--primary);">{{ size }}</td>
+                        {% for s in statuses %}
+                        <td class="text-center">
+                            {% set cnt = summary[size][s] %}
+                            {% if cnt > 0 %}
+                            <span class="badge badge-custom badge-status-{{ s }}">{{ cnt }}</span>
+                            {% else %}
+                            <span style="color:var(--text-label);">—</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="text-center" style="font-weight:700;">
+                            {% set row_total = 0 %}
+                            {% for s in statuses %}
+                                {% set row_total = row_total + summary[size][s] %}
+                            {% endfor %}
+                            {{ row_total }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr style="background:rgba(249,115,22,0.05);">
+                        <td style="font-weight:700;">TOTAL</td>
+                        {% for s in statuses %}
+                        <td class="text-center" style="font-weight:700;">
+                            {% set col_total = 0 %}
+                            {% for size in sizes %}
+                                {% set col_total = col_total + summary[size][s] %}
+                            {% endfor %}
+                            {{ col_total }}
+                        </td>
+                        {% endfor %}
+                        <td class="text-center" style="font-weight:800;color:var(--primary);">
+                            {% set grand_total = 0 %}
+                            {% for size in sizes %}
+                                {% for s in statuses %}
+                                    {% set grand_total = grand_total + summary[size][s] %}
+                                {% endfor %}
+                            {% endfor %}
+                            {{ grand_total }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

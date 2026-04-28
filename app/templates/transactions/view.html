@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+{% block title %}{{ txn.invoice_no }}{% endblock %}
+{% block page_title %}Transaction Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-receipt me-2" style="color:var(--primary)"></i>{{ txn.invoice_no }}</h1>
+        <p>
+            <span class="badge badge-custom badge-type-{{ txn.transaction_type }}">{{ txn.transaction_type }}</span>
+            &nbsp;&middot;&nbsp;{{ txn.transaction_date }}
+            {% if txn.driver_name %}&nbsp;&middot;&nbsp;<i class="bi bi-person me-1"></i>{{ txn.driver_name }}{% endif
+            %}
+        </p>
+    </div>
+    <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+{# ═══ QUANTITY SUMMARY BAR ═══════════════════════════════════════════════════ #}
+<div class="qty-summary-bar mb-4">
+    <div class="qty-grand">
+        <div class="qty-grand-num">{{ txn.total_qty }}</div>
+        <div class="qty-grand-label">Total Tanks</div>
+    </div>
+    <div class="qty-divider"></div>
+    <div class="qty-breakdown">
+        {% if txn.qty_by_size %}
+        {% for size, qty in txn.qty_by_size.items() %}
+        <div class="qty-size-block">
+            <div class="qty-size-num">{{ qty }}</div>
+            <div class="qty-size-label">{{ size }}</div>
+        </div>
+        {% if not loop.last %}
+        <div class="qty-sep">+</div>
+        {% endif %}
+        {% endfor %}
+        {% else %}
+        <span class="td-muted">No tanks recorded</span>
+        {% endif %}
+    </div>
+    <div class="qty-divider"></div>
+    <div class="qty-meta">
+        {% if txn.transaction_type == 'Delivery' %}
+        <div class="qty-meta-label">Payment</div>
+        <span class="badge badge-custom badge-pay-{{ txn.payment_status }} qty-meta-badge">
+            {{ txn.payment_status }}
+        </span>
+        {% elif txn.transaction_type in ['Plant OUT', 'Plant IN'] %}
+        <div class="qty-meta-label">Plant</div>
+        <strong class="qty-meta-value">{{ txn.plant.plant_name if txn.plant else '—' }}</strong>
+        {% else %}
+        <div class="qty-meta-label">Consumer</div>
+        <strong class="qty-meta-value">{{ txn.consumer.business_name if txn.consumer else '—' }}</strong>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    {# ── LEFT column ── #}
+    <div class="col-md-4">
+
+        {# Transaction Info #}
+        <div class="card mb-3">
+            <div class="card-header"><span>Transaction Info</span></div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td class="td-label">Invoice No.</td>
+                        <td class="td-code td-primary fw-bold">{{ txn.invoice_no }}</td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">Type</td>
+                        <td>
+                            <span class="badge badge-custom badge-type-{{ txn.transaction_type }}">
+                                {{ txn.transaction_type }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">Date</td>
+                        <td>{{ txn.transaction_date }}</td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">Consumer</td>
+                        <td class="td-muted">{{ txn.consumer.business_name if txn.consumer else '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">Plant</td>
+                        <td class="td-muted">{{ txn.plant.plant_name if txn.plant else '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">Driver</td>
+                        <td class="td-muted">{{ txn.driver_name or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="td-label">Truck</td>
+                        <td class="td-muted">{{ txn.truck_plate or '—' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        {# Financial Summary — Delivery only #}
+        {% if txn.transaction_type == 'Delivery' %}
+        <div class="card mb-3">
+            <div class="card-header"><span>Financial Summary</span></div>
+            <div class="card-body">
+                <div class="fin-row">
+                    <span class="fin-label">Total Amount</span>
+                    <span class="fin-total">&#8369;{{ "{:,.2f}".format(txn.total_amount or 0) }}</span>
+                </div>
+                <div class="fin-row">
+                    <span class="fin-label">Amount Paid</span>
+                    <span class="fin-paid">&#8369;{{ "{:,.2f}".format(txn.amount_paid or 0) }}</span>
+                </div>
+                <hr class="fin-hr">
+                <div class="fin-row">
+                    <span class="fin-label">Balance</span>
+                    <span
+                        class="fin-balance {% if txn.balance and txn.balance > 0 %}balance-due{% else %}balance-ok{% endif %}">
+                        &#8369;{{ "{:,.2f}".format(txn.balance or 0) }}
+                    </span>
+                </div>
+                <div class="mt-2 text-center">
+                    <span class="badge badge-custom badge-pay-{{ txn.payment_status }} fin-status-badge">
+                        {{ txn.payment_status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {# Add Payment #}
+        {% if txn.payment_status != 'Paid' %}
+        <div class="card">
+            <div class="card-header"><span>Add Payment</span></div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('transactions.add_payment', id=txn.id) }}">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label">Amount (&#8369;)</label>
+                            <input type="number" step="0.01" name="amount" class="form-control" required
+                                placeholder="0.00">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Method</label>
+                            <select name="payment_method" class="form-select">
+                                {% for m in ['Cash','Bank Transfer','Check','GCash','Other'] %}
+                                <option value="{{ m }}">{{ m }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Reference No.</label>
+                            <input type="text" name="reference_no" class="form-control" placeholder="Optional">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-cash me-1"></i>Record Payment
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {# Remarks #}
+        {% if txn.remarks %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="td-label mb-1">Remarks</div>
+                <div>{{ txn.remarks }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── RIGHT column: Tank line items ── #}
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header">
+                <span><i class="bi bi-database me-2" style="color:var(--primary)"></i>Tank Line Items</span>
+                <span class="badge" style="background:var(--primary);color:#fff;font-size:12px;">
+                    {{ txn.total_qty }} tanks total
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Code / Serial</th>
+                                <th>Size</th>
+                                <th>Category</th>
+                                <th class="text-center" style="color:var(--primary);">Qty</th>
+                                <th>Condition</th>
+                                <th>Unit Price</th>
+                                <th>Refill Cost</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>
+                                    {% if item.tank %}
+                                    <a href="{{ url_for('tanks.view', id=item.tank.id) }}" class="item-link">
+                                        {{ item.tank.serial_number }}
+                                    </a>
+                                    {% if not item.tank.has_serial_number %}
+                                    <span class="auto-badge">auto</span>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="bulk-label">
+                                        <i class="bi bi-collection me-1"></i>Bulk Qty ({{ item.tank_size }})
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge size-badge">
+                                        {{ item.tank.tank_size if item.tank else item.tank_size or '—' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">
+                                        {{ item.tank.tank_category if item.tank else item.tank_category or 'Old' }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="item-qty">{{ item.quantity or 1 }}</span>
+                                </td>
+                                <td class="td-muted">{{ item.condition or '—' }}</td>
+                                <td>&#8369;{{ "{:,.2f}".format(item.unit_price or 0) }}</td>
+                                <td>&#8369;{{ "{:,.2f}".format(item.refill_cost or 0) }}</td>
+                                <td class="fw-bold">
+                                    &#8369;{{ "{:,.2f}".format((item.unit_price or 0) * (item.quantity or 1)) }}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4 td-muted">No items.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if items %}
+                        <tfoot>
+                            <tr class="tfoot-total">
+                                <td colspan="3" class="fw-bold" style="font-size:13px;">TOTAL</td>
+                                <td class="text-center">
+                                    <span class="tfoot-qty">{{ txn.total_qty }}</span>
+                                </td>
+                                <td colspan="3"></td>
+                                <td class="fw-bold">&#8369;{{ "{:,.2f}".format(txn.total_amount or 0) }}</td>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# Payment History #}
+        {% if payments %}
+        <div class="card">
+            <div class="card-header">
+                <span><i class="bi bi-cash me-2" style="color:var(--primary)"></i>Payment History</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in payments %}
+                            <tr>
+                                <td class="td-muted">{{ p.payment_date }}</td>
+                                <td class="pay-amount">&#8369;{{ "{:,.2f}".format(p.amount) }}</td>
+                                <td class="td-muted">{{ p.payment_method }}</td>
+                                <td class="td-label">{{ p.reference_no or '—' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* ═══ Quantity Summary Bar ════════════════════════════════════════════════ */
+    .qty-summary-bar {
+        display: flex;
+        align-items: center;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 28px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .qty-grand {
+        text-align: center;
+        min-width: 100px;
+    }
+
+    .qty-grand-num {
+        font-size: 56px;
+        font-weight: 900;
+        color: var(--primary);
+        line-height: 1;
+    }
+
+    .qty-grand-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 4px;
+    }
+
+    .qty-divider {
+        width: 1px;
+        background: var(--border);
+        height: 60px;
+        margin: 0 28px;
+        flex-shrink: 0;
+    }
+
+    .qty-breakdown {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .qty-size-block {
+        text-align: center;
+        background: rgba(249, 115, 22, 0.08);
+        border: 1px solid rgba(249, 115, 22, 0.2);
+        border-radius: 10px;
+        padding: 10px 18px;
+        min-width: 70px;
+    }
+
+    .qty-size-num {
+        font-size: 30px;
+        font-weight: 900;
+        color: var(--primary);
+        line-height: 1;
+    }
+
+    .qty-size-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 3px;
+        font-weight: 600;
+    }
+
+    .qty-sep {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-muted);
+    }
+
+    .qty-meta {
+        text-align: center;
+        min-width: 90px;
+    }
+
+    .qty-meta-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+    }
+
+    .qty-meta-badge {
+        font-size: 13px !important;
+    }
+
+    .qty-meta-value {
+        font-size: 13px;
+    }
+
+    /* ═══ Financial Summary ═══════════════════════════════════════════════════ */
+    .fin-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 8px;
+    }
+
+    .fin-label {
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .fin-total {
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .fin-paid {
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .fin-balance {
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .fin-hr {
+        border-color: var(--border);
+        margin: 8px 0;
+    }
+
+    .fin-status-badge {
+        font-size: 14px !important;
+    }
+
+    /* ═══ Table elements ══════════════════════════════════════════════════════ */
+    .item-link {
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 12px;
+        text-decoration: none;
+    }
+
+    .item-link:hover {
+        text-decoration: underline;
+    }
+
+    .auto-badge {
+        font-size: 10px;
+        background: rgba(148, 163, 184, 0.15);
+        color: var(--text-muted);
+        padding: 2px 5px;
+        border-radius: 4px;
+    }
+
+    .bulk-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    .size-badge {
+        background: rgba(249, 115, 22, 0.15);
+        color: var(--primary);
+    }
+
+    .item-qty {
+        font-size: 18px;
+        font-weight: 900;
+        color: var(--primary);
+    }
+
+    .pay-amount {
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    /* ═══ Table footer total row ══════════════════════════════════════════════ */
+    .tfoot-total {
+        background: rgba(249, 115, 22, 0.06);
+        border-top: 2px solid var(--primary);
+    }
+
+    .tfoot-qty {
+        font-size: 20px;
+        font-weight: 900;
+        color: var(--primary);
+    }
+</style>
+{% endblock %}

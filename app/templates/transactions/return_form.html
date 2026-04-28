@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% block title %}Record Return{% endblock %}
+{% block page_title %}Record Return{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="h3 mb-1"><i class="bi bi-box-arrow-in-left me-2 text-primary"></i>Record Return</h1>
+        <p class="text-muted small mb-0">Record empty tanks returned by a consumer to the warehouse.</p>
+    </div>
+    <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to List
+    </a>
+</div>
+
+<form method="POST" id="returnForm">
+    <div class="row g-4">
+        <!-- LEFT COLUMN: CONSUMER & DATE -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4 bg-glass">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="card-title mb-0"><i class="bi bi-person-badge me-2 text-primary"></i>Return Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Consumer <span class="text-danger">*</span></label>
+                        <select name="consumer_id" id="consumerSelect" class="form-select form-select-lg shadow-none border-2" required>
+                            <option value="">— Select Consumer —</option>
+                            {% for c in consumers %}
+                            <option value="{{ c.id }}">{{ c.business_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div id="consumerLoading" class="spinner-border spinner-border-sm text-primary mt-2 d-none" role="status">
+                            <span class="visually-hidden">Loading holdings...</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Return Date <span class="text-danger">*</span></label>
+                        <input type="date" name="transaction_date" id="returnDate" class="form-control shadow-none" required>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label fw-bold">Remarks</label>
+                        <textarea name="remarks" class="form-control shadow-none" rows="3" placeholder="Any additional info..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HOLDINGS SUMMARY PANEL (Hidden by default) -->
+            <div id="holdingsPanel" class="card border-0 shadow-sm d-none">
+                <div class="card-header bg-primary text-white pt-3">
+                    <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Consumer Holdings</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0" id="holdingsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Size</th>
+                                    <th>Category</th>
+                                    <th class="text-center">On Hand</th>
+                                </tr>
+                            </thead>
+                            <tbody id="holdingsBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: RETURN QUANTITIES -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="bi bi-database-add me-2 text-primary"></i>Returned Tank Quantities</h5>
+                    <button type="button" id="fillFromHoldings" class="btn btn-sm btn-outline-primary d-none">
+                        <i class="bi bi-lightning-fill me-1"></i>Auto-Fill from Holdings
+                    </button>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info border-0 shadow-sm bg-opacity-10 d-flex align-items-center mb-4">
+                        <i class="bi bi-info-circle-fill fs-5 me-3 text-info"></i>
+                        <div>Enter the number of empty tanks returned per size. Leave as 0 for sizes not returned.</div>
+                    </div>
+
+                    {% for size in get_setting('Tank Sizes', is_list=True) %}
+                    {% set sid = size.replace(' ', '_') %}
+                    {% set CATEGORIES = get_setting('Tank Categories', is_list=True) %}
+                    <div class="return-size-card mb-3 p-3 border rounded shadow-sm bg-white" id="row-{{ sid }}">
+                        <div class="row align-items-start g-3">
+                            <div class="col-md-3">
+                                <div class="fw-bold text-primary mb-1">{{ size }}</div>
+                                <span class="badge bg-light text-dark border" style="font-size: 11px;">
+                                    Size ID: {{ size }}
+                                </span>
+                            </div>
+                            
+                            <div class="col-md-9 border-start px-4">
+                                <div class="row g-3">
+                                    {% for cat in CATEGORIES %}
+                                    {% set cid = cat.replace(' ', '_').lower() %}
+                                    <div class="col-md-6 border rounded p-2 bg-light bg-opacity-50">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                                            <label class="small fw-bold text-muted mb-0">Qty ({{ cat }})</label>
+                                            <span class="holding-hint text-primary small fw-bold" id="hint_{{ cid }}_{{ sid }}" style="font-size: 11px;"></span>
+                                        </div>
+                                        <div class="input-group input-group-sm mb-2">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="changeRtnQty('{{ cid }}_{{ sid }}', -1)">−</button>
+                                            <input type="number" name="qty_{{ cid }}_{{ sid }}" id="rqty_{{ cid }}_{{ sid }}" 
+                                                   class="form-control text-center fw-bold text-primary" value="0" min="0">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="changeRtnQty('{{ cid }}_{{ sid }}', 1)">+</button>
+                                        </div>
+                                        <div>
+                                            <label class="small text-muted mb-1" style="font-size: 10px;">Condition</label>
+                                            <select name="condition_{{ cid }}_{{ sid }}" class="form-select form-select-sm text-secondary">
+                                                <option value="Good">Good</option>
+                                                <option value="Damaged">Damaged</option>
+                                                <option value="For Repair">For Repair</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="card bg-primary text-white border-0 shadow mt-4">
+                        <div class="card-body py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Total Tanks Returned</h5>
+                            <span class="h3 mb-0 fw-bold" id="totalReturned">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sticky-bottom bg-white border-top py-3 mt-4" style="z-index: 1000; margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px;">
+        <div class="d-flex gap-2 justify-content-end">
+            <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary btn-lg px-5">Cancel</a>
+            <button type="submit" class="btn btn-primary btn-lg px-5 shadow">
+                <i class="bi bi-check-lg me-2"></i>Record Transaction
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set default date to today (local)
+    (function() {
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(now - offset)).toISOString().split('T')[0];
+        document.getElementById('returnDate').value = localISOTime;
+    })();
+
+    const RTN_SIZES = JSON.parse('{{ get_setting("Tank Sizes", is_list=True) | tojson | safe }}');
+    let consumerHoldings = {};
+
+    function changeRtnQty(idSuffix, delta) {
+        const inp = document.getElementById(`rqty_${idSuffix}`);
+        if (!inp) return;
+        let v = (parseInt(inp.value) || 0) + delta;
+        inp.value = Math.max(0, v);
+        updateTotal();
+    }
+
+    function updateTotal() {
+        let total = 0;
+        document.querySelectorAll('input[name^="qty_"]').forEach(inp => {
+            total += parseInt(inp.value) || 0;
+        });
+        document.getElementById('totalReturned').textContent = total;
+    }
+
+    // Attach input listeners
+    document.querySelectorAll('input[name^="qty_"]').forEach(inp => {
+        inp.addEventListener('input', updateTotal);
+    });
+
+    // Consumer selection logic
+    const consumerSelect = document.getElementById('consumerSelect');
+    const loadings = document.getElementById('consumerLoading');
+    const holdingsPanel = document.getElementById('holdingsPanel');
+    const holdingsBody = document.getElementById('holdingsBody');
+    const autoFillBtn = document.getElementById('fillFromHoldings');
+
+    consumerSelect.addEventListener('change', function() {
+        const cid = this.value;
+        if (!cid) {
+            holdingsPanel.classList.add('d-none');
+            autoFillBtn.classList.add('d-none');
+            resetHints();
+            return;
+        }
+
+        loadings.classList.remove('d-none');
+        fetch(`/transactions/api/consumer-tanks/${cid}`)
+            .then(res => res.json())
+            .then(data => {
+                loadings.classList.add('d-none');
+                processHoldings(data);
+            })
+            .catch(err => {
+                console.error(err);
+                loadings.classList.add('d-none');
+            });
+    });
+
+    function processHoldings(tanks) {
+        // Aggregate by size and category
+        consumerHoldings = {};
+        tanks.forEach(t => {
+            const key = `${t.tank_size}|${t.tank_category}`;
+            consumerHoldings[key] = (consumerHoldings[key] || 0) + 1;
+        });
+
+        // Update Table
+        holdingsBody.innerHTML = '';
+        if (tanks.length === 0) {
+            holdingsBody.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">No tanks currently held.</td></tr>';
+        } else {
+            Object.entries(consumerHoldings).sort().forEach(([key, count]) => {
+                const [size, cat] = key.split('|');
+                const row = `<tr>
+                    <td class="ps-3">${size}</td>
+                    <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">${cat}</span></td>
+                    <th class="text-center">${count}</th>
+                </tr>`;
+                holdingsBody.innerHTML += row;
+            });
+        }
+        holdingsPanel.classList.remove('d-none');
+        autoFillBtn.classList.remove('d-none');
+        updateHints();
+    }
+
+    function updateHints() {
+        resetHints();
+        Object.entries(consumerHoldings).forEach(([key, count]) => {
+            const [size, cat] = key.split('|');
+            const sid = size.replace(/ /g, '_');
+            const hintEl = document.getElementById(`hint_${cat.toLowerCase()}_${sid}`);
+            if (hintEl) {
+                hintEl.textContent = `(${count} on hand)`;
+            }
+        });
+    }
+
+    function resetHints() {
+        document.querySelectorAll('.holding-hint').forEach(el => el.textContent = '');
+    }
+
+    autoFillBtn.addEventListener('click', function() {
+        // Reset all first
+        document.querySelectorAll('input[name^="qty_"]').forEach(inp => inp.value = 0);
+        
+        Object.entries(consumerHoldings).forEach(([key, count]) => {
+            const [size, cat] = key.split('|');
+            const sid = size.replace(/ /g, '_');
+            const inp = document.getElementById(`rqty_${cat.toLowerCase()}_${sid}`);
+            if (inp) inp.value = count;
+        });
+        updateTotal();
+    });
+
+    document.getElementById('returnForm').addEventListener('submit', function (e) {
+        let total = parseInt(document.getElementById('totalReturned').textContent);
+        if (total === 0) {
+            e.preventDefault();
+            alert('Please enter at least 1 tank to return.');
+        }
+    });
+</script>
+
+<style>
+    .bg-glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .size-tag {
+        background: var(--primary);
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    .qty-entry-group {
+        background: white;
+        padding: 8px;
+        border-radius: 10px;
+        border: 1px solid #eee;
+    }
+    
+    .form-select-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .holding-hint {
+        font-weight: 500;
+        letter-spacing: -0.2px;
+    }
+    
+    #holdingsTable th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}

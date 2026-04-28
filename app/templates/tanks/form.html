@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Tank{% endblock %}
+{% block page_title %}{{ action }} Tank{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-database me-2" style="color:var(--primary)"></i>{{ action }} LPG Tank Stock</h1>
+        <p>{{ 'Add new tanks to your inventory. Serial number is optional.' if action == 'Add' else 'Update tank
+            information.' }}</p>
+    </div>
+    <a href="{{ url_for('tanks.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <span><i class="bi bi-clipboard-data me-2" style="color:var(--primary)"></i>Tank Details</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="tankForm">
+
+                    {% if not tank %}
+                    <!-- ── QUANTITY MODE (Add New) ────────────────── -->
+                    <div class="info-banner mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>No serial number needed.</strong> Just enter the tank size and quantity.
+                        The system will assign internal tracking codes automatically.
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Tank Size -->
+                        <div class="col-md-6">
+                            <label class="form-label">Tank Size <span class="text-danger">*</span></label>
+                            <select name="tank_size" id="tankSize" class="form-select" required>
+                                <option value="">— Select Size —</option>
+                                {% for s in get_setting('Tank Sizes', is_list=True) %}
+                                <option value="{{ s }}">{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="col-md-6">
+                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="changeQty(-1)">−</button>
+                                <input type="number" name="quantity" id="quantityInput" class="form-control text-center"
+                                    value="1" min="1" max="500" required style="font-size:18px;font-weight:700;">
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="changeQty(1)">+</button>
+                            </div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Max 500 tanks per
+                                registration</div>
+                        </div>
+
+                        <!-- Quick qty buttons -->
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap gap-2">
+                                <span style="font-size:12px;color:var(--text-muted);align-self:center;">Quick:</span>
+                                {% for q in [1, 5, 10, 20, 50, 100] %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    onclick="document.getElementById('quantityInput').value='{{ q }}'">{{ q }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <hr style="border-color:var(--border);">
+                        </div>
+
+                        <!-- Optional Serial Number -->
+                        {% if get_setting('Enable Serial Tracking') == 'True' %}
+                        <div class="col-12">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="useSerialSwitch" name="use_serial"
+                                    value="1" onchange="toggleSerialField(this.checked)">
+                                <label class="form-check-label" for="useSerialSwitch"
+                                    style="font-size:13px;font-weight:600;">
+                                    This tank has a Serial Number (optional)
+                                </label>
+                            </div>
+                            <div id="serialField" style="display:none;">
+                                <input type="text" name="serial_number" class="form-control"
+                                    placeholder="Enter serial number (e.g. PX-12345)" style="max-width:300px;">
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+                                    Only for single-tank entry. Quantity will be set to 1.
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% else %}
+                    <!-- ── EDIT MODE ──────────────────────────────── -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Serial / Internal Code</label>
+                            <input type="text" name="serial_number" class="form-control"
+                                value="{{ tank.serial_number if tank.has_serial_number else '' }}"
+                                placeholder="Enter serial number (optional)">
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">
+                                Leave blank to keep auto-generated code:
+                                <code style="color:var(--primary);">{{ tank.serial_number }}</code>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tank Size <span class="text-danger">*</span></label>
+                            <select name="tank_size" class="form-select" required>
+                                {% for s in get_setting('Tank Sizes', is_list=True) %}
+                                <option value="{{ s }}" {% if tank.tank_size==s %}selected{% endif %}>{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- ── COMMON FIELDS ─────────────────────────── -->
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label">Brand / Supplier</label>
+                            <input type="text" name="brand" class="form-control"
+                                value="{{ tank.brand if tank else '' }}" placeholder="e.g. Petron, Shellane">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tank Category</label>
+                            <select name="tank_category" class="form-select">
+                                {% for cat in get_setting('Tank Categories', is_list=True) %}
+                                <option value="{{ cat }}" {% if tank and tank.tank_category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Initial Status</label>
+                            <select name="status" class="form-select">
+                                {% set statuses = get_setting('Tank Statuses', is_list=True) %}
+                                {% for s in statuses %}
+                                <option value="{{ s }}" {% if tank and tank.status==s %}selected {% elif not tank and
+                                    s == (statuses[1] if statuses|length > 1 else 'Empty') %}selected{% endif %}>{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Location</label>
+                            <select name="location" class="form-select">
+                                {% set locations = get_setting('Tank Locations', is_list=True) %}
+                                {% for l in locations %}
+                                <option value="{{ l }}" {% if tank and tank.location==l %}selected {% elif not tank and
+                                    l == (locations[0] if locations else 'Warehouse') %}selected{% endif %}>{{ l }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Purchase Date</label>
+                            <input type="date" name="purchase_date" class="form-control"
+                                value="{{ tank.purchase_date|string if tank and tank.purchase_date else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Purchase Cost per Tank (₱)</label>
+                            <input type="number" step="0.01" name="purchase_cost" class="form-control"
+                                value="{{ tank.purchase_cost if tank else '0.00' }}" placeholder="0.00">
+                        </div>
+                        <div class="col-md-4">
+                            <!-- Cost preview -->
+                            <label class="form-label" id="totalCostLabel" style="visibility:hidden;">
+                                Total Cost (Preview)
+                            </label>
+                            <div id="totalCostPreview"
+                                style="font-size:22px;font-weight:800;color:var(--primary);display:none;">
+                                ₱<span id="totalCostVal">0.00</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="2"
+                                placeholder="Optional notes">{{ tank.notes if tank else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="bi bi-check-lg me-2"></i>
+                            <span id="submitLabel">Add Tank</span>
+                        </button>
+                        <a href="{{ url_for('tanks.index') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function changeQty(delta) {
+        const inp = document.getElementById('quantityInput');
+        if (!inp) return;
+        let val = parseInt(inp.value) + delta;
+        if (val < 1) val = 1;
+        if (val > 500) val = 500;
+        inp.value = val;
+        updatePreview();
+    }
+
+    function toggleSerialField(show) {
+        const f = document.getElementById('serialField');
+        const qInp = document.getElementById('quantityInput');
+        if (show) {
+            f.style.display = 'block';
+            if (qInp) { qInp.value = 1; qInp.disabled = true; }
+        } else {
+            f.style.display = 'none';
+            if (qInp) { qInp.disabled = false; }
+        }
+        updatePreview();
+    }
+
+    function updatePreview() {
+        const qty = parseInt(document.getElementById('quantityInput')?.value || 1);
+        const costInp = document.querySelector('input[name="purchase_cost"]');
+        const cost = parseFloat(costInp?.value || 0);
+        const total = qty * cost;
+
+        const lbl = document.getElementById('totalCostLabel');
+        const preview = document.getElementById('totalCostPreview');
+        const val = document.getElementById('totalCostVal');
+        const submitLbl = document.getElementById('submitLabel');
+
+        if (qty > 1) {
+            if (lbl) lbl.style.visibility = 'visible';
+            if (preview) preview.style.display = 'block';
+            if (val) val.textContent = total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+            if (submitLbl) submitLbl.textContent = `Add ${qty} Tanks`;
+        } else {
+            if (lbl) lbl.style.visibility = 'hidden';
+            if (preview) preview.style.display = 'none';
+            if (submitLbl) submitLbl.textContent = 'Add Tank';
+        }
+    }
+
+    // Live listeners
+    document.getElementById('quantityInput')?.addEventListener('input', updatePreview);
+    document.querySelector('input[name="purchase_cost"]')?.addEventListener('input', updatePreview);
+</script>
+
+<style>
+    .info-banner {
+        background: rgba(249, 115, 22, 0.1);
+        border: 1px solid rgba(249, 115, 22, 0.3);
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-size: 13px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-banner i {
+        color: var(--primary);
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}

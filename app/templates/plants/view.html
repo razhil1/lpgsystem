@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ plant.plant_name }}{% endblock %}
+{% block page_title %}Plant Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-building me-2" style="color:var(--primary)"></i>{{ plant.plant_name }}</h1>
+        <p>Refill Plant Details</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('plants.edit', id=plant.id) }}" class="btn btn-primary">
+            <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        <a href="{{ url_for('plants.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header"><span>Plant Information</span></div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td style="color:var(--text-muted);font-size:12px;">Plant Name</td>
+                        <td style="font-weight:700;color:var(--primary);">{{ plant.plant_name }}</td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-muted);font-size:12px;">Contact Person</td>
+                        <td>{{ plant.contact_person or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-muted);font-size:12px;">Phone</td>
+                        <td>{{ plant.phone or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--text-muted);font-size:12px;">Address</td>
+                        <td style="font-size:12px;">{{ plant.address or '—' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><span>Refill Costs per Size</span></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for size, cost in [('11kg', plant.refill_cost_11kg), ('11kg Fiber', plant.refill_cost_11kg_fiber), ('22kg', plant.refill_cost_22kg), ('50kg',
+                    plant.refill_cost_50kg), ('Industrial', plant.refill_cost_industrial)] %}
+                    <div class="col-6">
+                        <div
+                            style="background:rgba(249,115,22,0.06);border-radius:10px;padding:14px;text-align:center;">
+                            <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">{{ size }}</div>
+                            <div style="font-size:22px;font-weight:800;color:var(--primary);">
+                                ₱{{ "{:,.2f}".format(cost or 0) }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if plant.notes %}
+                <div class="mt-3 p-3" style="background:rgba(255,255,255,0.03);border-radius:8px;">
+                    <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Notes</div>
+                    <div style="font-size:13px;">{{ plant.notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

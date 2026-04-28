@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Missing Tanks (Lost Registry){% endblock %}
+{% block page_title %}Missing Tanks Report{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-search me-2" style="color:var(--danger)"></i>Missing / Lost Tanks</h1>
+        <p>Cylinders that have been declared missing or lost in the field</p>
+    </div>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+
+<div class="card">
+    <div class="card-header"><span>Lost Registry — {{ tanks|length }} tanks</span></div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Serial No.</th>
+                        <th>Size</th>
+                        <th>Category</th>
+                        <th>Last Registered Location</th>
+                        <th>Last Transaction</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tank in tanks %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('tanks.view', id=tank.id) }}" class="fw-bold text-primary" style="font-size:14px;">
+                                {{ tank.serial_number }}
+                            </a>
+                        </td>
+                        <td>{{ tank.tank_size }}</td>
+                        <td>
+                            <span class="badge {{ 'bg-info' if tank.tank_category == 'New' else 'bg-secondary' }}">
+                                {{ tank.tank_category }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-loc-{{ tank.location }}">{{ tank.location }}</span>
+                        </td>
+                        <td style="font-size:12px;color:var(--text-muted);">
+                            {{ tank.last_transaction_date.strftime('%b %d, %Y') if tank.last_transaction_date else 'No data' }}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('tanks.view', id=tank.id) }}" class="btn btn-sm btn-outline-primary" title="View History">
+                                <i class="bi bi-clock-history"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Send to Plant{% endblock %}
+{% block page_title %}Send Tanks to Plant{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="bi bi-arrow-up-circle me-2" style="color:var(--primary)"></i>Send Tanks to Plant</h1>
+        <p>Send empty tanks for refilling</p>
+    </div>
+    <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary"><i
+            class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+<form method="POST">
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header"><span>Plant OUT Details</span></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Refill Plant *</label>
+                            <select name="plant_id" class="form-select" required>
+                                <option value="">— Select Plant —</option>
+                                {% for p in plants %}
+                                <option value="{{ p.id }}">{{ p.plant_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Date *</label>
+                            <input type="date" name="transaction_date" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span>Select Empty Tanks (Warehouse)</span>
+                    <div>
+                        <span id="selectedTankCount" style="font-size:12px;color:var(--primary);font-weight:600;">0
+                            selected</span>
+                        <button type="button" id="selectAllTanks" class="btn btn-sm btn-outline-primary ms-2">Select
+                            All</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if tanks %}
+                    <div class="tank-grid">
+                        {% for tank in tanks %}
+                        <div class="tank-item"
+                            onclick="this.classList.toggle('selected');this.querySelector('input').checked=!this.querySelector('input').checked;document.getElementById('selectedTankCount').textContent=document.querySelectorAll('.tank-item.selected').length+' selected';">
+                            <input type="checkbox" name="tank_ids" value="{{ tank.id }}"
+                                onclick="event.stopPropagation();">
+                            <div class="tank-sn">{{ tank.serial_number }}</div>
+                            <div class="tank-size">{{ tank.tank_size }}</div>
+                            <div class="mt-1"><span class="badge badge-custom badge-status-Empty"
+                                    style="font-size:10px;">Empty</span></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5" style="color:var(--text-muted);">No empty tanks in warehouse.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg me-2"></i>Send to Plant</button>
+        <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>document.querySelector('input[name="transaction_date"]').value = new Date().toISOString().split('T')[0];</script>
+{% endblock %}
