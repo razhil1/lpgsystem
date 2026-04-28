@@ -152,7 +152,7 @@
                         <td>
                             <input type="checkbox" class="form-check-input tank-checkbox" value="{{ tank.id }}">
                         </td>
-                        <td style="color:var(--text-label);font-size:12px;">{{ tank.id }}</td>
+                        <td style="color:var(--text-label);font-size:12px;">{{ (tanks.page - 1) * 25 + loop.index }}</td>
                         <td>
                             <a href="{{ url_for('tanks.view', id=tank.id) }}"
                                 style="color:var(--primary);font-weight:600;font-size:13px;text-decoration:none;">
