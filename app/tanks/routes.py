@@ -72,7 +72,7 @@ def index():
             'total': Tank.query.filter_by(tank_size=s, is_active=True).count(),
             'full': Tank.query.filter_by(tank_size=s, status='Full', location=warehouse, is_active=True).count(),
             'empty': Tank.query.filter_by(tank_size=s, status='Empty', location=warehouse, is_active=True).count(),
-            'warehouse': Tank.query.filter_by(tank_size=s, location=warehouse, is_active=True).count(),
+            'consumers': Tank.query.filter_by(tank_size=s, location='With Consumer', is_active=True).count(),
         }
 
     return render_template('tanks/index.html', tanks=tanks,
