@@ -47,6 +47,7 @@ def index():
     status = request.args.get('status', '')
     location = request.args.get('location', '')
     page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 25, type=int)
 
     q = Tank.query.filter_by(is_active=True)
     if search:
@@ -58,7 +59,7 @@ def index():
     if location:
         q = q.filter(Tank.location == location)
 
-    tanks = q.order_by(Tank.id.desc()).paginate(page=page, per_page=25)
+    tanks = q.order_by(Tank.id.desc()).paginate(page=page, per_page=per_page)
 
     # Summary counts per size
     size_summary = {}
@@ -72,7 +73,7 @@ def index():
 
     return render_template('tanks/index.html', tanks=tanks,
                            search=search, size=size, status=status, location=location,
-                           size_summary=size_summary)
+                           per_page=per_page, size_summary=size_summary)
 
 
 # ──────────────────────────────────────────────────────

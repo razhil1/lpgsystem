@@ -89,8 +89,20 @@
                 </select>
             </div>
             <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Filter</button>
-                <a href="{{ url_for('tanks.index') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                <div class="w-100">
+                    <label class="form-label">Rows</label>
+                    <select name="per_page" class="form-select" onchange="this.form.submit()">
+                        {% for p in [25, 50, 100, 200] %}
+                        <option value="{{ p }}" {% if per_page == p %}selected{% endif %}>Show {{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="w-100 align-self-end">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Filter</button>
+                </div>
+                <div class="align-self-end">
+                    <a href="{{ url_for('tanks.index') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                </div>
             </div>
         </div>
     </form>
@@ -152,7 +164,7 @@
                         <td>
                             <input type="checkbox" class="form-check-input tank-checkbox" value="{{ tank.id }}">
                         </td>
-                        <td style="color:var(--text-label);font-size:12px;">{{ (tanks.page - 1) * 25 + loop.index }}</td>
+                        <td style="color:var(--text-label);font-size:12px;">{{ (tanks.page - 1) * tanks.per_page + loop.index }}</td>
                         <td>
                             <a href="{{ url_for('tanks.view', id=tank.id) }}"
                                 style="color:var(--primary);font-weight:600;font-size:13px;text-decoration:none;">
@@ -223,21 +235,21 @@
     <ul class="pagination pagination-sm">
         {% if tanks.has_prev %}
         <li class="page-item"><a class="page-link"
-                href="?page={{ tanks.prev_num }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}">‹</a>
+                href="?page={{ tanks.prev_num }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">‹</a>
         </li>
         {% endif %}
         {% for p in tanks.iter_pages() %}
         {% if p %}
         <li class="page-item {% if p == tanks.page %}active{% endif %}">
             <a class="page-link"
-                href="?page={{ p }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}">{{
+                href="?page={{ p }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">{{
                 p }}</a>
         </li>
         {% endif %}
         {% endfor %}
         {% if tanks.has_next %}
         <li class="page-item"><a class="page-link"
-                href="?page={{ tanks.next_num }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}">›</a>
+                href="?page={{ tanks.next_num }}{% if search %}&search={{ search }}{% endif %}{% if size %}&size={{ size }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if location %}&location={{ location }}{% endif %}{% if per_page %}&per_page={{ per_page }}{% endif %}">›</a>
         </li>
         {% endif %}
     </ul>
